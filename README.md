@@ -1,6 +1,6 @@
 # Environment Setup:
 
-**mimicgen, robosuite, gello_software must be added to PYTHONPATH in addition to this top left directory**
+**mimicgen, robosuite, gello_software must be added to PYTHONPATH in addition to this top level directory**
 
 **In Ubuntu:**
 
