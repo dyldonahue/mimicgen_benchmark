@@ -1,0 +1,16 @@
+# vscode files
+.vscode/
+
+# Python cache files
+__pycache__/
+
+# Python bytecode files
+*.pyc
+
+# softlinked directories
+robosuite/
+robomimic/
+gello_software/
+
+
+
