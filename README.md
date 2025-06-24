@@ -44,7 +44,7 @@ executables to run environments or record data
 helper scripts for quicker iteration
 
 
-**If receiving mesa-loader errors in Ubuntu, preload and run script: **
+**If receiving mesa-loader errors in Ubuntu, preload and run script:**
 
 ```
 
