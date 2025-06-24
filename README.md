@@ -44,9 +44,12 @@ executables to run environments or record data
 helper scripts for quicker iteration
 
 
-If receiving mesa-loader errors in Ubuntu, preload and run script: 
+**If receiving mesa-loader errors in Ubuntu, preload and run script: **
+
+```
 
 LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libstdc++.so.6 /usr/lib/x86_64-linux│ -gnu/libGL.so.1" python...
 
+```
 
 
