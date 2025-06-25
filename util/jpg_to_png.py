@@ -16,10 +16,9 @@ if not os.path.exists(model_file):
 
 os.chdir(model_dir)
 
-# Derive output path by replacing extension
 output_path = object_name + ".png"
 
-# Open and convert
+
 img = Image.open(model_file)
 img.save(output_path, "PNG")
 

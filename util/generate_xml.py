@@ -24,7 +24,7 @@ xml_template = f'''<mujoco model="{name}">
   </worldbody>
 </mujoco>'''
 
-#place the XML in the assets/objects directory
+
 import os
 assets_dir = os.path.join(os.path.dirname(__file__), "..", "assets", "objects")
 output_file = os.path.join(assets_dir, f"{name}.xml")
