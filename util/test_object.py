@@ -17,6 +17,7 @@ if not os.path.exists(model_file):
     print(f"Model file not found: {model_file}")
     sys.exit(1)
 
+
 os.chdir(model_dir)
 
 with open(model_file) as f:

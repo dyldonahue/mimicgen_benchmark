@@ -18,7 +18,6 @@ os.chdir(model_dir)
 
 output_path = object_name + ".png"
 
-
 img = Image.open(model_file)
 img.save(output_path, "PNG")
 
