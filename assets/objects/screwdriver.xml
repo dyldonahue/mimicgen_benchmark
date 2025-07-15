@@ -1,6 +1,6 @@
 <mujoco model="screwdriver">
   <asset>
-    <mesh file="../meshes/screwdriver.stl" name="screwdriver_mesh" scale="0.003 0.003 0.003"/>
+    <mesh file="../meshes/screwdriver.stl" name="screwdriver_mesh" scale="0.0015 0.0015 0.0015"/>
     <texture file="../textures/screwdriver.png" type="2d" name="tex-screwdriver" />
     <material name="screwdriver" reflectance="0.7" texrepeat="15 15" texture="tex-screwdriver" texuniform="true"/>
   </asset>

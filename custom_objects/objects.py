@@ -38,6 +38,8 @@ class ScrewObject(MujocoXMLObject):
         curr_dir = os.path.dirname(os.path.abspath(__file__))
         parent_dir = os.path.dirname(curr_dir) 
         xml_path = os.path.join(parent_dir, "assets", "objects", "screw.xml")
+        
+        
 
         super().__init__(
             xml_path,

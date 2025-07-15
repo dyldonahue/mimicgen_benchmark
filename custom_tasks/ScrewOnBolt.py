@@ -6,9 +6,12 @@ from robosuite.environments.manipulation.single_arm_env import SingleArmEnv
 from robosuite.models.arenas import TableArena
 from robosuite.models.tasks import ManipulationTask
 from robosuite.utils.observables import Observable, sensor
-from robosuite.utils.placement_samplers import UniformRandomSampler
+from robosuite.utils.placement_samplers import UniformRandomSampler, SequentialCompositeSampler
 from robosuite.utils.transform_utils import convert_quat
 from robosuite.environments.base import register_env
+
+from robosuite.models.objects.generated_objects import CompositeBodyObject
+from robosuite.utils.transform_utils import euler2mat, mat2quat, quat_multiply, quat2mat
 
 
 ''' imported custom objects'''
@@ -319,7 +322,9 @@ class ScrewOnBoltTask(SingleArmEnv):
         
 
         # task is successful when the screwdriver tip is touching the screw head
-        # TODO define screw.head 
+
+        # top offsetis relative to the screw body position
+        self.screw.head = self.screw.top_offset + self.screw.root_body_pos
         r_touch = 0
         screwdriver_touching_screw = self.check_contact(self.screwdriver, self.screw.head)
         
@@ -369,39 +374,70 @@ class ScrewOnBoltTask(SingleArmEnv):
 
         # create a list of all objects to be placed
         objects = [self.screwdriver, self.screw, self.threaded_insert]
-        
+
         
         # Create placement initializer
-        if self.placement_initializer is not None:
-            self.placement_initializer.reset()
-            self.placement_initializer.add_objects(objects)
-        else:
+        # if self.placement_initializer is not None:
+            
+        #     #self.placement_initializer.reset()
+        #     #self.placement_initializer.add_objects(objects)
+        # else:
             
             # TODO initialize screw to be in the threaded insert
 
-            # randomly place threaded insert + screw driver on the table
-
-
-            self.placement_initializer = UniformRandomSampler(
+        self.placement_initializer = SequentialCompositeSampler(name="ObjectPlacement")
+        self.placement_initializer.append_sampler(
+                 UniformRandomSampler(
                 name="ObjectSampler",
                 mujoco_objects=[self.screwdriver, self.threaded_insert],
                 x_range=[-0.08, 0.08],
                 y_range=[-0.08, 0.08],
-                #rotation_axis='z',
-                rotation=None,
+                rotation_axis='x',
+                rotation=0,
                 ensure_object_boundary_in_range=False,
                 ensure_valid_placement=True,
                 reference_pos=self.table_offset,
                 z_offset=0.01,
-            )
-
-            # add screw based on the threaded insert position
-            self.placement_initializer.add_objects(
-                [self.screw],
-
+            ))
+           
+        self.placement_initializer.append_sampler(
+                UniformRandomSampler(
+                name="ScrewSampler",
+                mujoco_objects=[self.screw],
+                x_range=[-0.08, 0.08],
+                y_range=[-0.08, 0.08],
+                rotation_axis='x',
+                rotation=90,
+                ensure_object_boundary_in_range=False,
                 ensure_valid_placement=True,
-                reference_pos=self.threaded_insert.root_body,
-            )
+                reference_pos=self.table_offset,
+                z_offset=0.01,
+            ))
+
+
+        
+
+
+# This z_offset should match the top surface of the insert
+
+#         self.placement_initializer.append_sampler(
+#     sampler=UniformRandomSampler(
+#         name="screw_sampler",
+#         mujoco_objects=[self.screw],
+#         x_range=(0, 0),
+#         y_range=(0.009, 0.009),
+#         rotation_axis="y",
+#         rotation=180,  # Set to angle if needed
+#         ensure_valid_placement=False,
+#         z_offset=0.1,  # Adjust based on insert height
+#     ),
+#     sample_args={
+#         "reference": self.threaded_insert.name,
+#         "on_top": False,  # Don't stack, just apply offset directly
+#     },
+# )
+
+           
 
         # task includes arena, robot, and objects of interest
         self.model = ManipulationTask(
@@ -433,9 +469,57 @@ class ScrewOnBoltTask(SingleArmEnv):
 
             # Sample from the placement initializer for all objects
             object_placements = self.placement_initializer.sample()
+            insert_pos, insert_quat, _ = object_placements["threaded_insert"]
+            screw_pos, screw_quat, _ = object_placements["screw"]
+
+
+            # these are tuples
+            delta = tuple(x - y for x, y in zip(screw_pos, insert_pos))
+
+            print("========================BEFORE MOVE========================")
+            formatted_insert= tuple(round(float(x), 3) for x in insert_pos)
+            print("insert:", formatted_insert) 
+
+            formatted_screw= tuple(round(float(x), 3) for x in screw_pos)
+            print("screw:", formatted_screw)
+            
+            formatted_delta= tuple(round(float(x), 3) for x in delta)
+            print("delta:", formatted_delta)
+            
+
+            new_screw_pos = tuple(x - y for x, y in zip(screw_pos, delta))
+
+            print("========================AFTER MOVE========================")
+            formatted_new_screw= tuple(round(float(x), 3) for x in new_screw_pos)
+            print("new screw:", formatted_new_screw)
+
+            
+
+        
+#             # Offset = where the screw bottom should be placed in insert's frame
+#             offset_local = self.threaded_insert.top_offset - self.screw.bottom_offset
+
+# # Rotate offset vector into world frame
+#             R_insert = quat2mat(insert_quat)
+#             offset_world = R_insert @ offset_local
+#             screw_pos = insert_pos + offset_world
+
+# # Define screw fixed orientation relative to insert (Euler angles in radians)
+#             euler_angles = [0, -np.pi/2, 0]  # roll, pitch, yaw
+#             R_screw_to_insert = euler2mat(euler_angles)
+
+# # Convert rotation matrix to quaternion (w, x, y, z)
+#             screw_to_insert_rot = mat2quat(R_screw_to_insert)
+
+# # Compose final screw orientation
+#             screw_quat = quat_multiply(insert_quat, screw_to_insert_rot)
+
+# # Update placement dict
+            object_placements["screw"] = (new_screw_pos, screw_quat, self.screw)
 
             # Loop through all objects and reset their positions
             for obj_pos, obj_quat, obj in object_placements.values():
+                
                 self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
     def _setup_observables(self):

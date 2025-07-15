@@ -1,7 +1,8 @@
+<?xml version="1.0" ?>
 <mujoco model="threaded_insert">
   <asset>
     <mesh file="../meshes/threaded_insert.stl" name="threaded_insert_mesh" scale="0.003 0.003 0.003"/>
-    <texture file="../textures/threaded_insert.png" type="2d" name="tex-threaded_insert" />
+    <texture file="../textures/threaded_insert.png" type="2d" name="tex-threaded_insert"/>
     <material name="threaded_insert" reflectance="0.7" texrepeat="15 15" texture="tex-threaded_insert" texuniform="true"/>
   </asset>
   <worldbody>
@@ -9,9 +10,9 @@
       <body name="object">
         <geom pos="0 0 0" mesh="threaded_insert_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="50" friction="0.95 0.3 0.1" material="threaded_insert" group="0" condim="4"/>
       </body>
-      <site rgba="0 0 0 0" size="0.005" pos="0 0 -0.045" name="bottom_site"/>
-      <site rgba="0 0 0 0" size="0.005" pos="0 0 0.03" name="top_site"/>
-      <site rgba="0 0 0 0" size="0.005" pos="0.03 0.03 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="-0.013070829431779802 -0.013107539859439925 -0.020294911866721617" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.01311577602171141 0.013105225357387468 0.020167288298073304" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.013093302726745606 0.013106382608413696 0" name="horizontal_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
