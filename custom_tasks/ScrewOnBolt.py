@@ -2,6 +2,7 @@
 # Pick up a screwdriver, and place into thread of a screw which is attached to a threaded insert and placed in any pose
 
 import numpy as np
+import random
 from robosuite.environments.manipulation.single_arm_env import SingleArmEnv
 from robosuite.models.arenas import TableArena
 from robosuite.models.tasks import ManipulationTask
@@ -12,6 +13,7 @@ from robosuite.environments.base import register_env
 
 from robosuite.models.objects.generated_objects import CompositeBodyObject
 from robosuite.utils.transform_utils import euler2mat, mat2quat, quat_multiply, quat2mat
+
 
 
 ''' imported custom objects'''
@@ -183,6 +185,7 @@ class ScrewOnBoltTask(SingleArmEnv):
         self.use_object_obs = use_object_obs
 
         # object placement initializer
+        self.insert_rot = None
         self.placement_initializer = placement_initializer
 
         super().__init__(
@@ -211,6 +214,32 @@ class ScrewOnBoltTask(SingleArmEnv):
             renderer=renderer,
             renderer_config=renderer_config,
         )
+
+    def _get_screw_position_placement(self):
+        """
+        Returns the rotation (rad) and coordinate offset vector (x, y, z) for the screw based on the random placement of insert
+        Returns:
+            tuple: (rotation, offset) where rotation is the angle in radians and offset is a 3-tuple of floats
+        """
+
+        if self.insert_rot is None:
+            raise ValueError("Insert rotation has not been set. Please set it before calling this method.")
+        
+        if self.insert_rot == 0:
+            # Insert is upright, screw is placed on top
+            rotation = np.pi / 2
+            offset = (0, 0, 0.054)
+            return rotation, offset
+        elif self.insert_rot == np.pi / 2:
+            # Insert is on its side, screw is placed on the side
+            rotation = 0
+            offset = (0, 0.12, 0)
+            return rotation, offset
+        
+        else:
+            raise ValueError("Invalid insert rotation. Must be either 0 or np.pi/2 radians.")
+
+
 
     def reward(self, action):
         """
@@ -385,21 +414,40 @@ class ScrewOnBoltTask(SingleArmEnv):
             
             # TODO initialize screw to be in the threaded insert
 
+       
         self.placement_initializer = SequentialCompositeSampler(name="ObjectPlacement")
         self.placement_initializer.append_sampler(
                  UniformRandomSampler(
-                name="ObjectSampler",
-                mujoco_objects=[self.screwdriver, self.threaded_insert],
-                x_range=[-0.08, 0.08],
-                y_range=[-0.08, 0.08],
-                rotation_axis='x',
-                rotation=0,
-                ensure_object_boundary_in_range=False,
+                name="ScrewDriverSampler",
+                mujoco_objects=[self.screwdriver],
+                x_range=[-self.table_full_size[0]/2 + 0.1, self.table_full_size[0]/2 - 0.1],
+                y_range=[-self.table_full_size[1]/2 + 0.1, self.table_full_size[1]/2 - 0.1],
+                rotation_axis='z',
+                rotation=None,
+                ensure_object_boundary_in_range=True,
                 ensure_valid_placement=True,
                 reference_pos=self.table_offset,
                 z_offset=0.01,
             ))
-           
+        
+         # need a discrete orientation selection for the insert, as physically it can only be upright or on its side
+        self.insert_rot  = random.choice([0, np.pi/2])  
+
+        self.placement_initializer.append_sampler(
+                 UniformRandomSampler(
+                name="InsertSampler",
+                mujoco_objects=[self.threaded_insert],
+                x_range=[-self.table_full_size[0]/2 + 0.1, self.table_full_size[0]/2 - 0.1],
+                y_range=[-self.table_full_size[1]/2 + 0.1, self.table_full_size[1]/2 - 0.1],
+                rotation_axis='x',
+                rotation=self.insert_rot,
+                ensure_object_boundary_in_range=True,
+                ensure_valid_placement=True,
+                reference_pos=self.table_offset,
+                z_offset=0.01,
+            ))
+        
+        screw_rotation, _ = self._get_screw_position_placement()
         self.placement_initializer.append_sampler(
                 UniformRandomSampler(
                 name="ScrewSampler",
@@ -407,11 +455,11 @@ class ScrewOnBoltTask(SingleArmEnv):
                 x_range=[-0.08, 0.08],
                 y_range=[-0.08, 0.08],
                 rotation_axis='x',
-                rotation=90,
+                rotation=screw_rotation,
                 ensure_object_boundary_in_range=False,
-                ensure_valid_placement=True,
+                ensure_valid_placement=False,
                 reference_pos=self.table_offset,
-                z_offset=0.01,
+                z_offset=0.1,
             ))
 
 
@@ -467,14 +515,16 @@ class ScrewOnBoltTask(SingleArmEnv):
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
         if not self.deterministic_reset:
 
+            _, screw_offset = self._get_screw_position_placement()
+
             # Sample from the placement initializer for all objects
             object_placements = self.placement_initializer.sample()
             insert_pos, insert_quat, _ = object_placements["threaded_insert"]
             screw_pos, screw_quat, _ = object_placements["screw"]
-
-
-            # these are tuples
+        
             delta = tuple(x - y for x, y in zip(screw_pos, insert_pos))
+            delta = tuple(x - y for x, y in zip(delta, screw_offset))
+            
 
             print("========================BEFORE MOVE========================")
             formatted_insert= tuple(round(float(x), 3) for x in insert_pos)
