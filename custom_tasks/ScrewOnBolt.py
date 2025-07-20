@@ -8,11 +8,12 @@ from robosuite.models.arenas import TableArena
 from robosuite.models.tasks import ManipulationTask
 from robosuite.utils.observables import Observable, sensor
 from robosuite.utils.placement_samplers import UniformRandomSampler, SequentialCompositeSampler
-from robosuite.utils.transform_utils import convert_quat
+from robosuite.utils.transform_utils import convert_quat, rotation_matrix
 from robosuite.environments.base import register_env
 
 from robosuite.models.objects.generated_objects import CompositeBodyObject
 from robosuite.utils.transform_utils import euler2mat, mat2quat, quat_multiply, quat2mat
+from scipy.spatial.transform import Rotation as R
 
 
 
@@ -526,46 +527,64 @@ class ScrewOnBoltTask(SingleArmEnv):
             delta = tuple(x - y for x, y in zip(delta, screw_offset))
             
 
-            print("========================BEFORE MOVE========================")
-            formatted_insert= tuple(round(float(x), 3) for x in insert_pos)
-            print("insert:", formatted_insert) 
+            # print("========================BEFORE MOVE========================")
+            # formatted_insert= tuple(round(float(x), 3) for x in insert_pos)
+            # print("insert:", formatted_insert) 
 
-            formatted_screw= tuple(round(float(x), 3) for x in screw_pos)
-            print("screw:", formatted_screw)
+            # formatted_screw= tuple(round(float(x), 3) for x in screw_pos)
+            # print("screw:", formatted_screw)
             
-            formatted_delta= tuple(round(float(x), 3) for x in delta)
-            print("delta:", formatted_delta)
+            # formatted_delta= tuple(round(float(x), 3) for x in delta)
+            # print("delta:", formatted_delta)
             
-
+            
             new_screw_pos = tuple(x - y for x, y in zip(screw_pos, delta))
-
-            print("========================AFTER MOVE========================")
-            formatted_new_screw= tuple(round(float(x), 3) for x in new_screw_pos)
-            print("new screw:", formatted_new_screw)
-
+            print ("========================BEFORE ROTATION========================")
+            print("insert pos:", insert_pos)
+            print("insert quat:", insert_quat)
+            print("screw pos:", new_screw_pos)
+            print("screw quat:", screw_quat)
             
 
-        
-#             # Offset = where the screw bottom should be placed in insert's frame
-#             offset_local = self.threaded_insert.top_offset - self.screw.bottom_offset
+            # if insert is on its side, lets rotate it randomly
+            if self.insert_rot == np.pi / 2:
+                print("==========================")
 
-# # Rotate offset vector into world frame
-#             R_insert = quat2mat(insert_quat)
-#             offset_world = R_insert @ offset_local
-#             screw_pos = insert_pos + offset_world
+                R_original_insert = quat2mat(insert_quat)
+                R_original_screw = quat2mat(screw_quat)
+                angle = np.random.uniform(0, 2 * np.pi)
 
-# # Define screw fixed orientation relative to insert (Euler angles in radians)
-#             euler_angles = [0, -np.pi/2, 0]  # roll, pitch, yaw
-#             R_screw_to_insert = euler2mat(euler_angles)
+                # need to then rotate the screw around the insert's top surface
+                insert_rot_R = R.from_quat(insert_quat)
+                screw_rot_R = R.from_quat(screw_quat)
+                local_z_axis = insert_rot_R.apply([0, 0, 1])  # Insert's top
+                spin_rot = R.from_rotvec(angle * local_z_axis)
+                screw_rot_R = spin_rot * screw_rot_R
+                screw_quat = screw_rot_R.as_quat()
+                insert_pos_np = np.array(insert_pos)
+                screw_pos_np = np.array(new_screw_pos)
+                relative_offset = screw_pos_np - insert_pos_np
+                rotated_offset = spin_rot.apply(relative_offset)
+                new_screw_pos = tuple(insert_pos_np + rotated_offset)
 
-# # Convert rotation matrix to quaternion (w, x, y, z)
-#             screw_to_insert_rot = mat2quat(R_screw_to_insert)
+                axis = np.array([1, 0, 0]) 
 
-# # Compose final screw orientation
-#             screw_quat = quat_multiply(insert_quat, screw_to_insert_rot)
+                world_spin_insert = R_original_insert @ axis
+                world_spin_screw = R_original_screw @ axis
+                
+                R_spin_insert = rotation_matrix(angle, world_spin_insert)[:3, :3]
+                R_spin_screw = rotation_matrix(angle, world_spin_screw)[:3, :3]
 
-# # Update placement dict
+                R_final_insert = R_spin_insert @ R_original_insert
+                R_final_screw = R_spin_screw @ R_original_screw
+                final_quat_insert = mat2quat(R_final_insert)
+                final_quat_screw = mat2quat(R_final_screw)
+            
+                insert_quat = final_quat_insert
+                screw_quat = final_quat_screw
+
             object_placements["screw"] = (new_screw_pos, screw_quat, self.screw)
+            object_placements["threaded_insert"] = (insert_pos, insert_quat, self.threaded_insert)
 
             # Loop through all objects and reset their positions
             for obj_pos, obj_quat, obj in object_placements.values():
