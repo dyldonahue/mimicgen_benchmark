@@ -462,10 +462,28 @@ class ScrewOnBoltTask(SingleArmEnv):
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
         if not self.deterministic_reset:
 
+            
+
 
             # Sample from the placement initializer for all objects
             object_placements = self.placement_initializer.sample()
-            
+
+            insert_pos, insert_quat, _ = object_placements["screw_with_insert"]
+           
+            if self.insert_rot == np.pi / 2:
+                 R_original_insert = quat2mat(insert_quat)
+                 angle = np.random.uniform(0, 2 * np.pi)
+                 
+                 axis = np.array([1, 0, 0])
+                 world_spin_insert = R_original_insert @ axis
+                 R_spin_insert = rotation_matrix(angle, world_spin_insert)[:3, :3]
+                 R_final_insert = R_spin_insert @ R_original_insert
+                 final_quat_insert = mat2quat(R_final_insert)
+                 insert_quat = final_quat_insert
+
+                 
+                 object_placements["screw_with_insert"] = (insert_pos, insert_quat, self.screwinsert)
+
             for obj_pos, obj_quat, obj in object_placements.values():
                 
                 self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
