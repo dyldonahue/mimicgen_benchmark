@@ -5,7 +5,6 @@ import numpy as np
 from robosuite.utils.transform_utils import euler2mat, mat2quat, quat_multiply
 
 
-
 #from robosuite.robots import Panda
 
 controller_config = load_controller_config(default_controller="JOINT_POSITION")

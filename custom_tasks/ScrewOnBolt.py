@@ -11,14 +11,13 @@ from robosuite.utils.placement_samplers import UniformRandomSampler, SequentialC
 from robosuite.utils.transform_utils import convert_quat, rotation_matrix
 from robosuite.environments.base import register_env
 
-from robosuite.models.objects.generated_objects import CompositeBodyObject
 from robosuite.utils.transform_utils import euler2mat, mat2quat, quat_multiply, quat2mat
 from scipy.spatial.transform import Rotation as R
 
 
 
 ''' imported custom objects'''
-from custom_objects.objects import ScrewDriverObject, ScrewObject, ThreadedInsertObject
+from custom_objects.objects import ScrewDriverObject, ScrewWithInsert, ScrewObject, ThreadedInsertObject
 
 class ScrewOnBoltTask(SingleArmEnv):
     """
@@ -216,31 +215,6 @@ class ScrewOnBoltTask(SingleArmEnv):
             renderer_config=renderer_config,
         )
 
-    def _get_screw_position_placement(self):
-        """
-        Returns the rotation (rad) and coordinate offset vector (x, y, z) for the screw based on the random placement of insert
-        Returns:
-            tuple: (rotation, offset) where rotation is the angle in radians and offset is a 3-tuple of floats
-        """
-
-        if self.insert_rot is None:
-            raise ValueError("Insert rotation has not been set. Please set it before calling this method.")
-        
-        if self.insert_rot == 0:
-            # Insert is upright, screw is placed on top
-            rotation = np.pi / 2
-            offset = (0, 0, 0.054)
-            return rotation, offset
-        elif self.insert_rot == np.pi / 2:
-            # Insert is on its side, screw is placed on the side
-            rotation = 0
-            offset = (0, 0.12, 0)
-            return rotation, offset
-        
-        else:
-            raise ValueError("Invalid insert rotation. Must be either 0 or np.pi/2 radians.")
-
-
 
     def reward(self, action):
         """
@@ -312,14 +286,15 @@ class ScrewOnBoltTask(SingleArmEnv):
         r_reach = (1 - np.tanh(10.0 * dist)) * 0.25
 
         # grasping reward
-        grasping_screwdriver = self._check_grasp(gripper=self.robots[0].gripper, object_geoms=self.scrwewdriver.geoms)
+        grasping_screwdriver = self._check_grasp(gripper=self.robots[0].gripper, object_geoms=self.screwdriver)
         if grasping_screwdriver:
             r_reach += 0.5
+            print("GRASPING SCREWDRIVER")
 
         # lifting is successful when the screwdriver is above the table top by a margin
         screwdriver_height = screwdriver_pos[2]
         table_height = self.table_offset[2]
-        screwdriver_lifted = screwdriver_height > table_height + 0.04
+        screwdriver_lifted = screwdriver_height > table_height + 0.8
         r_lift = 0.5 if screwdriver_lifted else 0.0
 
         
@@ -328,8 +303,8 @@ class ScrewOnBoltTask(SingleArmEnv):
 
         # Aligning is successful when screwdriver tip is facing the screw head
         if screwdriver_lifted:
+            print("SCREWDRIVER LIFTED")
 
-            # get the position of the screw head
             
             scew_pos = self.sim.data.body_xpos[self.screw_body_id]
             screwdriver_to_screw = scew_pos - screwdriver_pos
@@ -337,7 +312,7 @@ class ScrewOnBoltTask(SingleArmEnv):
             screwdriver_to_screw_unit = screwdriver_to_screw / screwdriver_to_screw_norm if screwdriver_to_screw_norm > 0 else np.zeros(3)
 
             # forward along z?
-            screwdriver_forward = self.sim.data.body_xmat[self.screwdriver_body_id][:3, 2]  
+            screwdriver_forward = self.sim.data.body_xmat[self.screwdriver_body_id][:3] 
 
             # calculate the angle between the screwdriver forward vector and the vector to the screw head
             angle_to_screw = np.arccos(np.clip(np.dot(screwdriver_forward, screwdriver_to_screw_unit), -1.0, 1.0))
@@ -345,8 +320,8 @@ class ScrewOnBoltTask(SingleArmEnv):
             # normalize the angle to be in [0, pi]
             angle_to_screw = np.abs(angle_to_screw)
 
-            # calculate the reward based on the angle
             r_align = 0.5 * (1 - np.tanh(10.0 * angle_to_screw))  # reward is in [0, 0.5]
+            print("SCREWDRIVER ALIGNED")
         else:
             r_align = 0.0
         
@@ -354,9 +329,13 @@ class ScrewOnBoltTask(SingleArmEnv):
         # task is successful when the screwdriver tip is touching the screw head
 
         # top offsetis relative to the screw body position
-        self.screw.head = self.screw.top_offset + self.screw.root_body_pos
+        #self.screw.head = self.screw.top_offset + self.sim.data.body_xpos[self.cubeA_body_id]
         r_touch = 0
-        screwdriver_touching_screw = self.check_contact(self.screwdriver, self.screw.head)
+
+        #TODO: this may return true if any part of screwdriver is touching any part of the the screw, 
+        # If so, adjust so only true if screwdriver tip is touching the screw head
+        screwdriver_touching_screw = self.check_contact(self.screwdriver, self.screw)   
+        
         
         if grasping_screwdriver and screwdriver_touching_screw:
             r_touch = 2.0
@@ -394,16 +373,22 @@ class ScrewOnBoltTask(SingleArmEnv):
         self.screwdriver = ScrewDriverObject(
             name="screwdriver"  
         )
-        self.screw = ScrewObject(
-            name="screw"
-        )
 
-        self.threaded_insert = ThreadedInsertObject(
+        self.threaded_insert = ThreadedInsertObject(  
             name="threaded_insert"
         )
 
+        self.screw = ScrewObject(
+            name="screw")
+        self.screwinsert = ScrewWithInsert(
+            name="screw_with_insert",
+            screw_obj=self.screw,
+            insert_obj=self.threaded_insert
+
+        )
+
         # create a list of all objects to be placed
-        objects = [self.screwdriver, self.screw, self.threaded_insert]
+        objects = [self.screwdriver, self.screwinsert]
 
         
         # Create placement initializer
@@ -413,10 +398,9 @@ class ScrewOnBoltTask(SingleArmEnv):
         #     #self.placement_initializer.add_objects(objects)
         # else:
             
-            # TODO initialize screw to be in the threaded insert
-
-       
+        
         self.placement_initializer = SequentialCompositeSampler(name="ObjectPlacement")
+        
         self.placement_initializer.append_sampler(
                  UniformRandomSampler(
                 name="ScrewDriverSampler",
@@ -431,62 +415,23 @@ class ScrewOnBoltTask(SingleArmEnv):
                 z_offset=0.01,
             ))
         
-         # need a discrete orientation selection for the insert, as physically it can only be upright or on its side
-        self.insert_rot  = random.choice([0, np.pi/2])  
+        # randomly select the insert rotation
+        self.insert_rot = random.choice([0, np.pi/2])  # 0 is upright, np.pi/2 is on its side
 
         self.placement_initializer.append_sampler(
-                 UniformRandomSampler(
-                name="InsertSampler",
-                mujoco_objects=[self.threaded_insert],
-                x_range=[-self.table_full_size[0]/2 + 0.1, self.table_full_size[0]/2 - 0.1],
-                y_range=[-self.table_full_size[1]/2 + 0.1, self.table_full_size[1]/2 - 0.1],
-                rotation_axis='x',
-                rotation=self.insert_rot,
-                ensure_object_boundary_in_range=True,
-                ensure_valid_placement=True,
-                reference_pos=self.table_offset,
-                z_offset=0.01,
-            ))
+                    UniformRandomSampler(
+                    name="ScrewInsertSampler",
+                    mujoco_objects=[self.screwinsert],
+                    x_range=[-self.table_full_size[0]/2 + 0.1, self.table_full_size[0]/2 - 0.1],
+                    y_range=[-self.table_full_size[1]/2 + 0.1, self.table_full_size[1]/2 - 0.1],
+                    rotation_axis='y',
+                    rotation=self.insert_rot,
+                    ensure_object_boundary_in_range=True,
+                    ensure_valid_placement=True,
+                    reference_pos=self.table_offset,
+                    z_offset=0.01,
+                ))
         
-        screw_rotation, _ = self._get_screw_position_placement()
-        self.placement_initializer.append_sampler(
-                UniformRandomSampler(
-                name="ScrewSampler",
-                mujoco_objects=[self.screw],
-                x_range=[-0.08, 0.08],
-                y_range=[-0.08, 0.08],
-                rotation_axis='x',
-                rotation=screw_rotation,
-                ensure_object_boundary_in_range=False,
-                ensure_valid_placement=False,
-                reference_pos=self.table_offset,
-                z_offset=0.1,
-            ))
-
-
-        
-
-
-# This z_offset should match the top surface of the insert
-
-#         self.placement_initializer.append_sampler(
-#     sampler=UniformRandomSampler(
-#         name="screw_sampler",
-#         mujoco_objects=[self.screw],
-#         x_range=(0, 0),
-#         y_range=(0.009, 0.009),
-#         rotation_axis="y",
-#         rotation=180,  # Set to angle if needed
-#         ensure_valid_placement=False,
-#         z_offset=0.1,  # Adjust based on insert height
-#     ),
-#     sample_args={
-#         "reference": self.threaded_insert.name,
-#         "on_top": False,  # Don't stack, just apply offset directly
-#     },
-# )
-
-           
 
         # task includes arena, robot, and objects of interest
         self.model = ManipulationTask(
@@ -505,7 +450,7 @@ class ScrewOnBoltTask(SingleArmEnv):
 
         # Additional object references from this env
         self.screwdriver_body_id = self.sim.model.body_name2id(self.screwdriver.root_body)
-        self.screw_body_id = self.sim.model.body_name2id(self.screw.root_body)
+        self.screwinsert_body_id = self.sim.model.body_name2id(self.screwinsert.root_body)
 
     def _reset_internal(self):
         """
@@ -513,83 +458,18 @@ class ScrewOnBoltTask(SingleArmEnv):
         """
         super()._reset_internal()
 
+
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
         if not self.deterministic_reset:
 
-            _, screw_offset = self._get_screw_position_placement()
 
             # Sample from the placement initializer for all objects
             object_placements = self.placement_initializer.sample()
-            insert_pos, insert_quat, _ = object_placements["threaded_insert"]
-            screw_pos, screw_quat, _ = object_placements["screw"]
-        
-            delta = tuple(x - y for x, y in zip(screw_pos, insert_pos))
-            delta = tuple(x - y for x, y in zip(delta, screw_offset))
             
-
-            # print("========================BEFORE MOVE========================")
-            # formatted_insert= tuple(round(float(x), 3) for x in insert_pos)
-            # print("insert:", formatted_insert) 
-
-            # formatted_screw= tuple(round(float(x), 3) for x in screw_pos)
-            # print("screw:", formatted_screw)
-            
-            # formatted_delta= tuple(round(float(x), 3) for x in delta)
-            # print("delta:", formatted_delta)
-            
-            
-            new_screw_pos = tuple(x - y for x, y in zip(screw_pos, delta))
-            print ("========================BEFORE ROTATION========================")
-            print("insert pos:", insert_pos)
-            print("insert quat:", insert_quat)
-            print("screw pos:", new_screw_pos)
-            print("screw quat:", screw_quat)
-            
-
-            # if insert is on its side, lets rotate it randomly
-            if self.insert_rot == np.pi / 2:
-                print("==========================")
-
-                R_original_insert = quat2mat(insert_quat)
-                R_original_screw = quat2mat(screw_quat)
-                angle = np.random.uniform(0, 2 * np.pi)
-
-                # need to then rotate the screw around the insert's top surface
-                insert_rot_R = R.from_quat(insert_quat)
-                screw_rot_R = R.from_quat(screw_quat)
-                local_z_axis = insert_rot_R.apply([0, 0, 1])  # Insert's top
-                spin_rot = R.from_rotvec(angle * local_z_axis)
-                screw_rot_R = spin_rot * screw_rot_R
-                screw_quat = screw_rot_R.as_quat()
-                insert_pos_np = np.array(insert_pos)
-                screw_pos_np = np.array(new_screw_pos)
-                relative_offset = screw_pos_np - insert_pos_np
-                rotated_offset = spin_rot.apply(relative_offset)
-                new_screw_pos = tuple(insert_pos_np + rotated_offset)
-
-                axis = np.array([1, 0, 0]) 
-
-                world_spin_insert = R_original_insert @ axis
-                world_spin_screw = R_original_screw @ axis
-                
-                R_spin_insert = rotation_matrix(angle, world_spin_insert)[:3, :3]
-                R_spin_screw = rotation_matrix(angle, world_spin_screw)[:3, :3]
-
-                R_final_insert = R_spin_insert @ R_original_insert
-                R_final_screw = R_spin_screw @ R_original_screw
-                final_quat_insert = mat2quat(R_final_insert)
-                final_quat_screw = mat2quat(R_final_screw)
-            
-                insert_quat = final_quat_insert
-                screw_quat = final_quat_screw
-
-            object_placements["screw"] = (new_screw_pos, screw_quat, self.screw)
-            object_placements["threaded_insert"] = (insert_pos, insert_quat, self.threaded_insert)
-
-            # Loop through all objects and reset their positions
             for obj_pos, obj_quat, obj in object_placements.values():
                 
                 self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
+               
 
     def _setup_observables(self):
         """
@@ -606,7 +486,7 @@ class ScrewOnBoltTask(SingleArmEnv):
             pf = self.robots[0].robot_model.naming_prefix
             modality = "object"
 
-            # position and rotation of the first pipe
+            # position and rotation of the screwdriver
             @sensor(modality=modality)
             def screwdriver_pos(obs_cache):
                 return np.array(self.sim.data.body_xpos[self.screwdriver_body_id])
@@ -614,14 +494,14 @@ class ScrewOnBoltTask(SingleArmEnv):
             @sensor(modality=modality)
             def screwdriver_quat(obs_cache):
                 return convert_quat(np.array(self.sim.data.body_xquat[self.screwdriver_body_id]), to="xyzw")
-
+            
             @sensor(modality=modality)
-            def screw_pos(obs_cache):
-                return np.array(self.sim.data.body_xpos[self.screw_body_id])
-
+            def screwinsert_pos(obs_cache):
+                return np.array(self.sim.data.body_xpos[self.screwinsert_body_id])
+            
             @sensor(modality=modality)
-            def screw_quat(obs_cache):
-                return convert_quat(np.array(self.sim.data.body_xquat[self.screw_body_id]), to="xyzw")
+            def screwinsert_quat(obs_cache):
+                return convert_quat(np.array(self.sim.data.body_xquat[self.screwinsert_body_id]), to="xyzw")
 
             @sensor(modality=modality)
             def gripper_to_screwdriver(obs_cache):
@@ -632,22 +512,24 @@ class ScrewOnBoltTask(SingleArmEnv):
                 )
 
             @sensor(modality=modality)
-            def gripper_to_screw(obs_cache):
+            def gripper_to_screwinsert(obs_cache):
                 return (
-                    obs_cache["screw_pos"] - obs_cache[f"{pf}eef_pos"]
-                    if "screw_pos" in obs_cache and f"{pf}eef_pos" in obs_cache
+                    obs_cache["screwinsert_pos"] - obs_cache[f"{pf}eef_pos"]
+                    if "screwinsert_pos" in obs_cache and f"{pf}eef_pos" in obs_cache
                     else np.zeros(3)
                 )
 
             @sensor(modality=modality)
-            def screwdriver_to_screw(obs_cache):
+            def screwdriver_to_screwinsert(obs_cache):
                 return (
-                    obs_cache["screw_pos"] - obs_cache["screwdriver_pos"]
-                    if "screwdriver_pos" in obs_cache and "screw_pos" in obs_cache
+                    obs_cache["screwinsert_pos"] - obs_cache["screwdriver_pos"]
+                    if "screwinsert_pos" in obs_cache and "screwdriver_pos" in obs_cache
                     else np.zeros(3)
                 )
 
-            sensors = [screwdriver_pos, screwdriver_quat, screw_pos, screw_quat, gripper_to_screwdriver, gripper_to_screw, screwdriver_to_screw]
+            sensors = [screwdriver_pos, screwdriver_quat, 
+                       screwinsert_pos, screwinsert_quat, 
+                       gripper_to_screwdriver, gripper_to_screwinsert, screwdriver_to_screwinsert]
             names = [s.__name__ for s in sensors]
 
             # Create observables
@@ -667,12 +549,12 @@ class ScrewOnBoltTask(SingleArmEnv):
         Returns:
             bool: True if screwdriver is touching the screw head, False otherwise.
         """
-        _, _, r_task = self.staged_rewards()
-        return r_task > 0
+        _, _, _, r_touch = self.staged_rewards()
+        return r_touch > 0
 
     def visualize(self, vis_settings):
         """
-        In addition to super call, visualize gripper site proportional to the distance to the pipe.
+        In addition to super call, visualize gripper site proportional to the distance to the screwdriver.
 
         Args:
             vis_settings (dict): Visualization keywords mapped to T/F, determining whether that specific
@@ -682,6 +564,6 @@ class ScrewOnBoltTask(SingleArmEnv):
         # Run superclass method first
         super().visualize(vis_settings=vis_settings)
 
-        # Color the gripper visualization site according to its distance to the pipe
+        # Color the gripper visualization site according to its distance to the screwdriver
         if vis_settings["grippers"]:
             self._visualize_gripper_to_target(gripper=self.robots[0].gripper, target=self.screwdriver)

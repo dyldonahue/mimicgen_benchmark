@@ -1,12 +1,11 @@
 # my_collect_demos.py
 
-from robosuite.scripts.collect_human_demonstrations import main as robosuite_main
-from custom_tasks.my_stack import MyStack
+from robosuite.scripts.collect_human_demonstrations import collect_human_trajectory
+from custom_tasks.ScrewOnBolt import ScrewOnBolt
 
 # Import and register custom components
-from custom_tasks.my_stack import MyStack
 from robosuite.environments.registry import register_env
-register_env("MyStack", MyStack)
+register_env("ScrewOnBolt", ScrewOnBolt)
 
 # Register custom objects or devices here as needed
 # e.g., from custom_objects.my_block import MyBlock
