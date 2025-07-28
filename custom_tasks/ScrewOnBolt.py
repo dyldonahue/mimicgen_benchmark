@@ -165,12 +165,13 @@ class ScrewOnBoltTask(SingleArmEnv):
         ignore_done=False,
         hard_reset=True,
         camera_names="agentview",
-        camera_heights=256,
-        camera_widths=256,
+        camera_heights=512,
+        camera_widths=512,
         camera_depths=False,
         camera_segmentations=None,  # {None, instance, class, element}
         renderer="mujoco",
         renderer_config=None,
+        
     ):
         # settings for table top
         self.table_full_size = table_full_size
@@ -289,7 +290,7 @@ class ScrewOnBoltTask(SingleArmEnv):
         grasping_screwdriver = self._check_grasp(gripper=self.robots[0].gripper, object_geoms=self.screwdriver)
         if grasping_screwdriver:
             r_reach += 0.5
-            print("GRASPING SCREWDRIVER")
+            
 
         # lifting is successful when the screwdriver is above the table top by a margin
         screwdriver_height = screwdriver_pos[2]
@@ -303,25 +304,23 @@ class ScrewOnBoltTask(SingleArmEnv):
 
         # Aligning is successful when screwdriver tip is facing the screw head
         if screwdriver_lifted:
-            print("SCREWDRIVER LIFTED")
-
             
-            scew_pos = self.sim.data.body_xpos[self.screw_body_id]
-            screwdriver_to_screw = scew_pos - screwdriver_pos
-            screwdriver_to_screw_norm = np.linalg.norm(screwdriver_to_screw)
-            screwdriver_to_screw_unit = screwdriver_to_screw / screwdriver_to_screw_norm if screwdriver_to_screw_norm > 0 else np.zeros(3)
+            scewinsert_pos = self.sim.data.body_xpos[self.screwinsert_body_id]
+            screwdriver_to_screwinsert = scewinsert_pos - screwdriver_pos
+            screwdriver_to_screwinsert_norm = np.linalg.norm(screwdriver_to_screwinsert)
+            screwdriver_to_screwinsert_unit = screwdriver_to_screwinsert / screwdriver_to_screwinsert_norm if screwdriver_to_screwinsert_norm > 0 else np.zeros(3)
 
             # forward along z?
             screwdriver_forward = self.sim.data.body_xmat[self.screwdriver_body_id][:3] 
 
             # calculate the angle between the screwdriver forward vector and the vector to the screw head
-            angle_to_screw = np.arccos(np.clip(np.dot(screwdriver_forward, screwdriver_to_screw_unit), -1.0, 1.0))
+            angle_to_screw = np.arccos(np.clip(np.dot(screwdriver_forward, screwdriver_to_screwinsert_unit), -1.0, 1.0))
 
             # normalize the angle to be in [0, pi]
             angle_to_screw = np.abs(angle_to_screw)
 
             r_align = 0.5 * (1 - np.tanh(10.0 * angle_to_screw))  # reward is in [0, 0.5]
-            print("SCREWDRIVER ALIGNED")
+            
         else:
             r_align = 0.0
         
@@ -334,7 +333,7 @@ class ScrewOnBoltTask(SingleArmEnv):
 
         #TODO: this may return true if any part of screwdriver is touching any part of the the screw, 
         # If so, adjust so only true if screwdriver tip is touching the screw head
-        screwdriver_touching_screw = self.check_contact(self.screwdriver, self.screw)   
+        screwdriver_touching_screw = self.check_contact(self.screwdriver, self.screwinsert)   
         
         
         if grasping_screwdriver and screwdriver_touching_screw:
@@ -389,8 +388,8 @@ class ScrewOnBoltTask(SingleArmEnv):
 
         # create a list of all objects to be placed
         objects = [self.screwdriver, self.screwinsert]
-
         
+
         # Create placement initializer
         # if self.placement_initializer is not None:
             
@@ -414,9 +413,6 @@ class ScrewOnBoltTask(SingleArmEnv):
                 reference_pos=self.table_offset,
                 z_offset=0.01,
             ))
-        
-        # randomly select the insert rotation
-        self.insert_rot = random.choice([0, np.pi/2])  # 0 is upright, np.pi/2 is on its side
 
         self.placement_initializer.append_sampler(
                     UniformRandomSampler(
@@ -424,14 +420,13 @@ class ScrewOnBoltTask(SingleArmEnv):
                     mujoco_objects=[self.screwinsert],
                     x_range=[-self.table_full_size[0]/2 + 0.1, self.table_full_size[0]/2 - 0.1],
                     y_range=[-self.table_full_size[1]/2 + 0.1, self.table_full_size[1]/2 - 0.1],
-                    rotation_axis='y',
-                    rotation=self.insert_rot,
+                    rotation_axis='z',
+                    rotation=(np.pi, np.pi + np.pi/4),
                     ensure_object_boundary_in_range=True,
                     ensure_valid_placement=True,
                     reference_pos=self.table_offset,
-                    z_offset=0.01,
+                    z_offset=0.04,
                 ))
-        
 
         # task includes arena, robot, and objects of interest
         self.model = ManipulationTask(
@@ -457,36 +452,46 @@ class ScrewOnBoltTask(SingleArmEnv):
         Resets simulation internal configurations.
         """
         super()._reset_internal()
+        print("Resetting Screw On Bolt Task")
 
 
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
         if not self.deterministic_reset:
 
-            
-
-
             # Sample from the placement initializer for all objects
             object_placements = self.placement_initializer.sample()
 
             insert_pos, insert_quat, _ = object_placements["screw_with_insert"]
-           
-            if self.insert_rot == np.pi / 2:
-                 R_original_insert = quat2mat(insert_quat)
-                 angle = np.random.uniform(0, 2 * np.pi)
-                 
-                 axis = np.array([1, 0, 0])
-                 world_spin_insert = R_original_insert @ axis
-                 R_spin_insert = rotation_matrix(angle, world_spin_insert)[:3, :3]
-                 R_final_insert = R_spin_insert @ R_original_insert
-                 final_quat_insert = mat2quat(R_final_insert)
-                 insert_quat = final_quat_insert
 
-                 
-                 object_placements["screw_with_insert"] = (insert_pos, insert_quat, self.screwinsert)
+            # spin the direction of the tilted insert
+            R_tilted = quat2mat(insert_quat)
+            z_axis = np.array([0, 0, 1])
+            angle = np.random.uniform(0, 2 * np.pi)
+            R_spin = rotation_matrix(angle, z_axis)[:3, :3]
+            R_final = R_spin @ R_tilted
+            insert_quat = mat2quat(R_final)
+
+            # gravity might not like tilt, freeze it so it doesnt tip over
+            body_id = self.sim.model.body_name2id("screw_with_insert_threaded_insert_main")  # or whatever name it is
+            self.sim.model.body_mass[body_id] = 0   
+            self.sim.model.body_dofnum[body_id] = 0  # prevent movement
+            self.sim.model.body_gravcomp[body_id] = 1.0
+                             
+            object_placements["screw_with_insert"] = (insert_pos, insert_quat, self.screwinsert)
 
             for obj_pos, obj_quat, obj in object_placements.values():
-                
-                self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
+
+                if obj.joints and len(obj.joints) > 0:
+                    # If the object has joints, set the joint positions
+                    self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
+                else:
+                   try:
+                        body_id = self.sim.model.body_name2id(obj.root_body)
+                   except Exception:
+                     raise ValueError(f"Could not find body name: {obj.root_body} in the model")
+
+                   self.sim.model.body_pos[body_id] = obj_pos
+                   self.sim.model.body_quat[body_id] = convert_quat(obj_quat, to="wxyz")
                
 
     def _setup_observables(self):
@@ -568,6 +573,9 @@ class ScrewOnBoltTask(SingleArmEnv):
             bool: True if screwdriver is touching the screw head, False otherwise.
         """
         _, _, _, r_touch = self.staged_rewards()
+
+        if (r_touch > 0):
+            print("TASK COMPLETION IN PROGRESS")
         return r_touch > 0
 
     def visualize(self, vis_settings):

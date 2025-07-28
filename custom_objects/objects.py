@@ -45,7 +45,7 @@ class ScrewObject(MujocoXMLObject):
         super().__init__(
             xml_path,
             name=name,
-            joints=[dict(type="free", damping="0.0005")],
+            joints=None,
             obj_type="all",
             duplicate_collision_geoms=True,
         )
@@ -60,7 +60,7 @@ class ThreadedInsertObject(MujocoXMLObject):
         super().__init__(
             xml_path,
             name=name,
-            joints=[dict(type="free", damping="0.0005")],
+            joints=None,
             obj_type="all",
             duplicate_collision_geoms=True,
         )
@@ -96,7 +96,9 @@ class ScrewWithInsert(CompositeBodyObject):
             object_locations=[insert_pos, screw_pos],
             object_quats=[insert_quat, screw_quat],
             object_parents=parents,
+            joints=None
         )
+
 
 
 

@@ -162,8 +162,8 @@ class Gello(Device):
 
         return dict(
             dpos=dpos,
-            rotation=rotation *0.1,  
-            raw_drotation=raw_drotation * 0.1,
+            rotation=rotation *1,  
+            raw_drotation=raw_drotation * 1,
             grasp=self.joint_state[-1],
             reset=False,
          )
