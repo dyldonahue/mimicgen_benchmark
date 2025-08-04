@@ -35,15 +35,18 @@ Some data exists within robosuite or mimicgen structure, not currently published
 ### Generating Data
 
 #### 1. Collect Teleoperated demonstrations  
-Utilize Robosuite's collect_human_demonstrations script
+Utilize Robosuite's collect_human_demonstrations script OR via Robomimic directly (untested)
 
-#### 2. Annotate demos with additional info
+#### 2. (if collected via Robosuite) Convert format
+utilize Robomimic's convert_robosuite task
+
+#### 3. Annotate demos with additional info
 Utilize Mimicgen's prepare_src_demonstrations script
 
-#### 3. (if using new task for first time) Update Mimicgen config list
+#### 4. (if using new task for first time) Update Mimicgen config list
 Utilize Mimicgen's generate_config_template script
 
-#### 4. Generate synthetic demos
+#### 5. Generate synthetic demos
 Utilize Mimicgen's generate_dataset
 
  <a id="issues"></a>
