@@ -2,6 +2,7 @@
 - [Environment Setup](#env-setup)
 - [Directory Structure](#dir-struct)
 - [Generating Data](#data-gen)
+- [Common Issues](#issues)
 
  <a id="env-setup"></a>
 ### Environment Setup:
@@ -30,7 +31,7 @@ Some data exists within robosuite or mimicgen structure, not currently published
 - Mimicgen places custom task configs with all other configs in mimicgen/exps.  
 
 
-
+ <a id="data-gen"></a>
 ### Generating Data
 
 #### 1. Collect Teleoperated demonstrations  
@@ -45,8 +46,12 @@ Utilize Mimicgen's generate_config_template script
 #### 4. Generate synthetic demos
 Utilize Mimicgen's generate_dataset
 
+ <a id="issues"></a>
+### Errors I've encountered
 
-**If receiving mesa-loader errors in Ubuntu, preload and run script:**
+#### 1. Mesa loader (Ubuntu)
+
+Preload Mesa with execution:
 
 ```
 
@@ -54,7 +59,5 @@ LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libstdc++.so.6 /usr/lib/x86_64-linux│ -g
 
 ```
 
-
-1) 
 
 
