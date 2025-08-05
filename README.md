@@ -27,8 +27,9 @@ export PYTHONPATH="/path/to/thisDirectory:/path/to/robosuite:/path/to/mimicgen:/
 **util:** helper scripts for quicker iteration  
 
 Some data exists within robosuite or mimicgen structure, not currently published here.  
-- Custom device control (gello) is added as a selectable option in Robosuite's collect_human_demonstrations.  
-- Mimicgen places custom task configs with all other configs in mimicgen/exps.  
+- Custom device control (gello) is added as a selectable option in Robosuite's collect_human_demonstrations  
+- Mimicgen places custom task configs with all other configs in mimicgen/exps
+- Initiialze tasks & environments by adding them to the __init__.py in both Robosuite and Mimicgen
 
 
  <a id="data-gen"></a>
