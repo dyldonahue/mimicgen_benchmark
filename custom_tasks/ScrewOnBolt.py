@@ -2,7 +2,8 @@
 # Pick up a screwdriver, and place into thread of a screw which is attached to a threaded insert and placed in any pose
 
 import numpy as np
-import random
+import os
+import xml.etree.ElementTree as ET
 from robosuite.environments.manipulation.single_arm_env import SingleArmEnv
 from robosuite.models.arenas import TableArena
 from robosuite.models.tasks import ManipulationTask
@@ -12,7 +13,7 @@ from robosuite.utils.transform_utils import convert_quat, rotation_matrix
 from robosuite.environments.base import register_env
 
 from robosuite.utils.transform_utils import euler2mat, mat2quat, quat_multiply, quat2mat
-from scipy.spatial.transform import Rotation as R
+
 
 
 
@@ -216,6 +217,44 @@ class ScrewOnBoltTask(SingleArmEnv):
             renderer_config=renderer_config,
         )
 
+    def edit_model_xml(self, xml_str):
+        curr_dir = os.path.dirname(__file__)  
+        assets_root = os.path.abspath(os.path.join(curr_dir, "../assets"))
+        objects_path = os.path.join(assets_root, "objects")
+        meshes_path = os.path.join(assets_root, "meshes")
+        textures_path = os.path.join(assets_root, "textures")
+
+        tree = ET.fromstring(xml_str)
+        root = tree
+        asset = root.find("asset")
+        if asset is None:
+            return xml_str 
+
+        all_elements = asset.findall("mesh") + asset.findall("texture")
+
+        for elem in all_elements:
+            old_path = elem.get("file")
+            if old_path is None:
+                continue
+
+            if "robosuite" in old_path:
+               
+                continue
+
+            filename = os.path.basename(old_path)
+
+            if elem.tag == "mesh":
+                new_path = os.path.join(meshes_path, filename)
+            elif elem.tag == "texture":
+                new_path = os.path.join(textures_path, filename)
+            else:
+                
+                new_path = os.path.join(objects_path, filename)
+
+            elem.set("file", new_path)
+
+        return ET.tostring(root, encoding="utf8").decode("utf8")
+
 
     def reward(self, action):
         """
@@ -334,6 +373,7 @@ class ScrewOnBoltTask(SingleArmEnv):
         #TODO: this may return true if any part of screwdriver is touching any part of the the screw, 
         # If so, adjust so only true if screwdriver tip is touching the screw head
         screwdriver_touching_screw = self.check_contact(self.screwdriver, self.screwinsert)   
+       
         
         
         if grasping_screwdriver and screwdriver_touching_screw:
@@ -400,6 +440,7 @@ class ScrewOnBoltTask(SingleArmEnv):
         
         self.placement_initializer = SequentialCompositeSampler(name="ObjectPlacement")
         
+        
         self.placement_initializer.append_sampler(
                  UniformRandomSampler(
                 name="ScrewDriverSampler",
@@ -452,8 +493,6 @@ class ScrewOnBoltTask(SingleArmEnv):
         Resets simulation internal configurations.
         """
         super()._reset_internal()
-        print("Resetting Screw On Bolt Task")
-
 
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
         if not self.deterministic_reset:
@@ -462,6 +501,7 @@ class ScrewOnBoltTask(SingleArmEnv):
             object_placements = self.placement_initializer.sample()
 
             insert_pos, insert_quat, _ = object_placements["screw_with_insert"]
+            
 
             # spin the direction of the tilted insert
             R_tilted = quat2mat(insert_quat)
@@ -492,6 +532,7 @@ class ScrewOnBoltTask(SingleArmEnv):
 
                    self.sim.model.body_pos[body_id] = obj_pos
                    self.sim.model.body_quat[body_id] = convert_quat(obj_quat, to="wxyz")
+            
                
 
     def _setup_observables(self):
@@ -574,9 +615,34 @@ class ScrewOnBoltTask(SingleArmEnv):
         """
         _, _, _, r_touch = self.staged_rewards()
 
-        if (r_touch > 0):
-            print("TASK COMPLETION IN PROGRESS")
         return r_touch > 0
+    
+    def _check_lift(self):
+        """
+        Check if the screwdriver is lifted above the table top by a margin.
+
+        Returns:
+            bool: True if screwdriver is lifted, False otherwise.
+        """
+        screwdriver_pos = self.sim.data.body_xpos[self.screwdriver_body_id]
+        table_height = self.table_offset[2]
+
+        return screwdriver_pos[2] > table_height + 0.8
+    
+    def _check_distance(self):
+        """
+        Check if the distance between two objects is within a certain range.
+
+        Returns:
+            bool: True if the distance is within the range, False otherwise.
+        """
+        pos1 = self.sim.data.body_xpos[self.screwdriver_body_id]
+        pos2 = self.sim.data.body_xpos[self.screwinsert_body_id]
+        
+        distance = np.linalg.norm(pos1 - pos2)
+        
+        return 0.1 < distance < 0.5
+
 
     def visualize(self, vis_settings):
         """

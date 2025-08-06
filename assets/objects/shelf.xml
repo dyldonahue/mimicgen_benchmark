@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<mujoco model="shelf">
+  <asset>
+    <mesh file="../meshes/shelf.stl" name="shelf_mesh" scale="0.00023 0.00023 0.00023"/>
+    <texture file="../textures/shelf.png" type="2d" name="tex-shelf"/>
+    <material name="shelf" reflectance="0.7" texrepeat="15 15" texture="tex-shelf" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <geom pos="0 0 0" mesh="shelf_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="50" friction="3 1 0.5" material="shelf" group="0" condim="4"/>
+      </body>
+      <site rgba="0 0 0 0" size="0.005" pos="-0.22309999332198605 -0.03004116520499052 -0.11657879567626132" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.22310000667801397 0.03895883479500949 0.0720212043237387" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.22310000000000002 0.0345 0" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>

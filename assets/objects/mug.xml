@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<mujoco model="mug">
+  <asset>
+    <mesh file="../meshes/mug.stl" name="mug_mesh" scale="0.0007 0.0007 0.0007"/>
+    <texture file="../textures/mug.png" type="2d" name="tex-mug"/>
+    <material name="mug" reflectance="0.7" texrepeat="15 15" texture="tex-mug" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <geom pos="0 0 0" mesh="mug_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="50" friction="0.95 0.3 0.1" material="mug" group="0" condim="4"/>
+      </body>
+      <site rgba="0 0 0 0" size="0.005" pos="-0.031083025656142075 -0.028003497502669946 -0.02985581246478641" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.04991221131285206 0.028003498652115207 0.03664138373272337" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.04049761848449707 0.028003498077392577 0" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>

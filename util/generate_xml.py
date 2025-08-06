@@ -20,7 +20,7 @@ def generate_xml_from_stl(object_name, mesh_path):
     horiz_radius_x = float((max_bounds[0] - min_bounds[0]) / 2)
     horiz_radius_y = float((max_bounds[1] - min_bounds[1]) / 2)
 
-    scale = 0.003
+    scale = 0.0007
     bottom_site = [scale * (min_bounds[0] - center[0]),
                scale * (min_bounds[1] - center[1]),
                scale * (min_bounds[2] - center[2])]
@@ -34,7 +34,7 @@ def generate_xml_from_stl(object_name, mesh_path):
     # Build XML
     mjcf = ET.Element("mujoco", model=object_name)
     asset = ET.SubElement(mjcf, "asset")
-    ET.SubElement(asset, "mesh", file=f"../meshes/{object_name}.stl", name=f"{object_name}_mesh", scale="0.003 0.003 0.003")
+    ET.SubElement(asset, "mesh", file=f"../meshes/{object_name}.stl", name=f"{object_name}_mesh", scale=f"{scale} {scale} {scale}")
     ET.SubElement(asset, "texture", file=f"../textures/{object_name}.png", type="2d", name=f"tex-{object_name}")
     ET.SubElement(asset, "material", name=object_name, reflectance="0.7", texrepeat="15 15", texture=f"tex-{object_name}", texuniform="true")
 

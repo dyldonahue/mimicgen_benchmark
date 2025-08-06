@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<mujoco model="mugtree">
+  <asset>
+    <mesh file="../meshes/mugtree.stl" name="mugtree_mesh" scale="0.0007 0.0007 0.0007"/>
+    <material name="mugtree" reflectance="0.7" texrepeat="15 15" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <geom pos="0 0 0" mesh="mugtree_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="50" friction="0.95 0.3 0.1" material="mugtree" group="0" condim="4"/>
+      </body>
+      <site rgba="0 0 0 0" size="0.005" pos="-0.03498484278505823 -0.03499999947709684 -0.07502205701736107" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.03501515988522985 0.0349999925120389 0.11730204576584206" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.03500000133514404 0.03499999599456787 0" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>

@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<mujoco model="peginhole-square">
+  <asset>
+    <mesh file="../meshes/peginhole-square.stl" name="peginhole-square_mesh" scale="0.0007 0.0007 0.0007"/>
+    <material name="peginhole-square" reflectance="0.7" texrepeat="15 15" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <geom pos="0 0 0" mesh="peginhole-square_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="50" friction="0.95 0.3 0.1" material="peginhole-square" group="0" condim="4"/>
+      </body>
+      <site rgba="0 0 0 0" size="0.005" pos="-0.006299999770278674 -0.006300000213189916 -0.0063000000048337055" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.006300000229721326 0.006300000120596095 0.006299999995166294" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.0063 0.0063000001668930055 0" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>

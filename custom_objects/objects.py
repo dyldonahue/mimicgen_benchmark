@@ -3,6 +3,92 @@ import os
 from robosuite.utils.transform_utils import axisangle2quat, quat_multiply
 import numpy as np
 
+class PegInHoleSquareObject(MujocoXMLObject):
+    def __init__(self, name):
+
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(curr_dir) 
+        xml_path = os.path.join(parent_dir, "assets", "objects", "peginhole-square.xml")
+
+        super().__init__(
+            xml_path,
+            name=name,
+            joints=[dict(type="free", damping="0.0005")],
+            obj_type="all",
+            duplicate_collision_geoms=True,
+        )
+class PegInHoleTriangleObject(MujocoXMLObject):
+    def __init__(self, name):
+
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(curr_dir) 
+        xml_path = os.path.join(parent_dir, "assets", "objects", "peginhole-triangle.xml")
+
+        super().__init__(
+            xml_path,
+            name=name,
+            joints=[dict(type="free", damping="0.0005")],
+            obj_type="all",
+            duplicate_collision_geoms=True,
+        )
+class PegInHoleBoardObject(MujocoXMLObject):
+    def __init__(self, name):
+
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(curr_dir) 
+        xml_path = os.path.join(parent_dir, "assets", "objects", "peginhole-board.xml")
+
+        super().__init__(
+            xml_path,
+            name=name,
+            joints=[dict(type="free", damping="0.0005")],
+            obj_type="all",
+            duplicate_collision_geoms=True,
+        )
+
+class MugTreeObject(MujocoXMLObject):
+    def __init__(self, name):
+
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(curr_dir) 
+        xml_path = os.path.join(parent_dir, "assets", "objects", "mugtree.xml")
+
+        super().__init__(
+            xml_path,
+            name=name,
+            joints=[dict(type="free", damping="0.0005")],
+            obj_type="all",
+            duplicate_collision_geoms=True,
+        )
+class MugObject(MujocoXMLObject):
+    def __init__(self, name):
+
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(curr_dir) 
+        xml_path = os.path.join(parent_dir, "assets", "objects", "mug.xml")
+
+        super().__init__(
+            xml_path,
+            name=name,
+            joints=[dict(type="free", damping="0.0005")],
+            obj_type="all",
+            duplicate_collision_geoms=True,
+        )
+class ShelfObject(MujocoXMLObject):
+    def __init__(self, name):
+
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(curr_dir) 
+        xml_path = os.path.join(parent_dir, "assets", "objects", "shelf.xml")
+
+        super().__init__(
+            xml_path,
+            name=name,
+            joints=[dict(type="free", damping="0.0005")],
+            obj_type="all",
+            duplicate_collision_geoms=True,
+        )
+
 class PipeObject(MujocoXMLObject):
     def __init__(self, name):
 
