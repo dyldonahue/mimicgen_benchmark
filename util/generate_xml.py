@@ -5,15 +5,12 @@ import numpy as np
 import xml.etree.ElementTree as ET
 
 def generate_xml_from_stl(object_name, mesh_path):
-    # Load mesh
     mesh = trimesh.load_mesh(mesh_path)
 
-    # Compute AABB (bounding box)
     bounds = mesh.bounds
     min_bounds = bounds[0]
     max_bounds = bounds[1]
 
-    # Compute offsets relative to centroid
     center = mesh.centroid
     bottom_site = [0, 0, float(min_bounds[2] - center[2])]
     top_site = [0, 0, float(max_bounds[2] - center[2])]
@@ -31,7 +28,6 @@ def generate_xml_from_stl(object_name, mesh_path):
     horiz_radius_y = scale * ((max_bounds[1] - min_bounds[1]) / 2)
 
 
-    # Build XML
     mjcf = ET.Element("mujoco", model=object_name)
     asset = ET.SubElement(mjcf, "asset")
     ET.SubElement(asset, "mesh", file=f"../meshes/{object_name}.stl", name=f"{object_name}_mesh", scale=f"{scale} {scale} {scale}")
@@ -47,7 +43,7 @@ def generate_xml_from_stl(object_name, mesh_path):
                   density="50", friction="0.95 0.3 0.1",
                   material=object_name, group="0", condim="4")
 
-    # Placement sites
+
     ET.SubElement(parent_body, "site", rgba="0 0 0 0", size="0.005",
                   pos=f"{bottom_site[0]} {bottom_site[1]} {bottom_site[2]}", name="bottom_site")
     ET.SubElement(parent_body, "site", rgba="0 0 0 0", size="0.005",
