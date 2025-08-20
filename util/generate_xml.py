@@ -6,26 +6,39 @@ import xml.etree.ElementTree as ET
 
 def generate_xml_from_stl(object_name, mesh_path):
     mesh = trimesh.load_mesh(mesh_path)
+    scale = 0.002
 
-    bounds = mesh.bounds
-    min_bounds = bounds[0]
-    max_bounds = bounds[1]
+    minb, maxb = mesh.bounds
 
-    center = mesh.centroid
-    bottom_site = [0, 0, float(min_bounds[2] - center[2])]
-    top_site = [0, 0, float(max_bounds[2] - center[2])]
-    horiz_radius_x = float((max_bounds[0] - min_bounds[0]) / 2)
-    horiz_radius_y = float((max_bounds[1] - min_bounds[1]) / 2)
+    
+    
 
-    scale = 0.0007
-    bottom_site = [scale * (min_bounds[0] - center[0]),
-               scale * (min_bounds[1] - center[1]),
-               scale * (min_bounds[2] - center[2])]
-    top_site = [scale * (max_bounds[0] - center[0]),
-            scale * (max_bounds[1] - center[1]),
-            scale * (max_bounds[2] - center[2])]
-    horiz_radius_x = scale * ((max_bounds[0] - min_bounds[0]) / 2)
-    horiz_radius_y = scale * ((max_bounds[1] - min_bounds[1]) / 2)
+    mesh = trimesh.load_mesh(mesh_path)
+    minb, maxb = mesh.bounds
+    verts = mesh.vertices.copy()
+
+# apply rotation to align tip along Z
+    R = trimesh.transformations.rotation_matrix(np.radians(-90), [0, 1, 0])[:3,:3]  # example: rotate around Y
+    verts_upright = (R @ verts.T).T
+
+# compute top/bottom offsets along new Z
+    min_z = verts_upright[:, 2].min()
+    max_z = verts_upright[:, 2].max()
+    bottom_local = [0, 0, min_z - mesh.centroid[2]]
+    top_local    = [0, 0, max_z - mesh.centroid[2]]
+
+
+    
+
+    # Apply mesh scale
+    bottom_site = [c*scale for c in bottom_local]
+    top_site = [c*scale for c in top_local]
+    
+    horiz_radius_x = float((maxb[0] - minb[0]) / 2)
+    horiz_radius_y = float((maxb[1] - minb[1]) / 2)
+
+    horiz_radius_x = scale * ((maxb[0] - minb[0]) / 2)
+    horiz_radius_y = scale * ((maxb[1] - minb[1]) / 2)
 
 
     mjcf = ET.Element("mujoco", model=object_name)

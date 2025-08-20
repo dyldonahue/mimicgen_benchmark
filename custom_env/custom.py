@@ -64,11 +64,9 @@ class MG_Screwbolt(RobosuiteInterface):
             subtask_term_signals (dict): dictionary that maps subtask name to termination flag (0 or 1)
         """
         signals = dict()
-
-        # first subtask is grasping screwdriver (motion relative to screwdriver)
-        signals["grasp"] = int(self.env._check_grasp(gripper=self.env.robots[0].gripper, object_geoms=self.env.screwdriver))
+    
         signals["lift"] = int(self.env._check_lift())
-        signals["distance"] = int(self.env._check_distance())
+        #signals["distance"] = int(self.env._check_distance())
         
 
         # final subtask is placing screwdriver on screw_with_insert (motion relative to screw_with_insert) - but final subtask signal is not needed

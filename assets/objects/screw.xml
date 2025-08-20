@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <mujoco model="screw">
   <asset>
-    <mesh file="../meshes/screw.stl" name="screw_mesh" scale="0.003 0.003 0.003"/>
+    <mesh file="../meshes/screw.stl" name="screw_mesh" scale="0.002 0.002 0.002"/>
     <texture file="../textures/screw.png" type="2d" name="tex-screw"/>
     <material name="screw" reflectance="0.7" texrepeat="15 15" texture="tex-screw" texuniform="true"/>
   </asset>
@@ -9,10 +9,11 @@
     <body>
       <body name="object">
         <geom pos="0 0 0" mesh="screw_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="50" friction="0.95 0.3 0.1" material="screw" group="0" condim="4"/>
+        <site rgba="0 0 0 0" size="0.005" pos="0.0 0.002724 0.0" name="head_site"/>
       </body>
-      <site rgba="0 0 0 0" size="0.005" pos="-0.0670104429954308 -0.01259518433019636 -0.012649177181098875" name="bottom_site"/>
-      <site rgba="0 0 0 0" size="0.005" pos="0.051375035977957874 0.01259529590204241 0.012649223697807375" name="top_site"/>
-      <site rgba="0 0 0 0" size="0.005" pos="0.05919273948669434 0.012595240116119386 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.0 -0.076200 0.0" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.0 0.002724 0.0" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.00839682674407959 0.03946182632446289 0" name="horizontal_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

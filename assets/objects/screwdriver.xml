@@ -1,17 +1,19 @@
+<?xml version="1.0" ?>
 <mujoco model="screwdriver">
   <asset>
-    <mesh file="../meshes/screwdriver.stl" name="screwdriver_mesh" scale="0.0015 0.0015 0.0015"/>
-    <texture file="../textures/screwdriver.png" type="2d" name="tex-screwdriver" />
+    <mesh file="../meshes/screwdriver.stl" name="screwdriver_mesh" scale="0.001 0.001 0.001"/>
+    <texture file="../textures/screwdriver.png" type="2d" name="tex-screwdriver"/>
     <material name="screwdriver" reflectance="0.7" texrepeat="15 15" texture="tex-screwdriver" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
         <geom pos="0 0 0" mesh="screwdriver_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="50" friction="0.95 0.3 0.1" material="screwdriver" group="0" condim="4"/>
+        <site rgba="0 0 0 0" size="0.005" pos="0.105992 0.0 0.0" name="tip_site"/>
       </body>
-      <site rgba="0 0 0 0" size="0.005" pos="0 0 -0.045" name="bottom_site"/>
-      <site rgba="0 0 0 0" size="0.005" pos="0 0 0.03" name="top_site"/>
-      <site rgba="0 0 0 0" size="0.005" pos="0.03 0.03 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="-0.102989 0.0 0.0" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.105992 0.0 0.0" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.1044903678894043 0.01691373348236084 0" name="horizontal_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

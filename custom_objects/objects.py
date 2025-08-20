@@ -162,7 +162,7 @@ class ScrewWithInsert(CompositeBodyObject):
         insert_pos = [0,0,0]
         insert_quat = [0, 0, 0, 1]
 
-        screw_offset = [0.0, 0.0, 0.074]  # E.g., placed just above insert
+        screw_offset = [0.0, 0.0, 0.048]  # E.g., placed just above insert
 
 # Construct a 90° (π/2 rad) rotation around Y axis (can change axis as needed)
         axis = [0, 0, np.pi/2]  # Y-axis

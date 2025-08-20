@@ -16,54 +16,39 @@ class Screwbolt_Config(MG_Config):
         @MG_TaskSpec object.
         """
 
-        # grasp screwdriver
+        # grasp & lift screwdriver
         self.task.task_spec.subtask_1 = dict(
             object_ref="screwdriver", 
-            subtask_term_signal="grasp",
-            subtask_term_offset_range=(10, 20),
-            selection_strategy="nearest_neighbor_object",
-            selection_strategy_kwargs=dict(nn_k=3),
-            action_noise=0.05,
-            num_interpolation_steps=5,
-            num_fixed_steps=0,
-            apply_noise_during_interpolation=False,
-        )
-
-        # lift screwdriver
-        self.task.task_spec.subtask_2 = dict(
-            object_ref=self.screwdriver, 
             subtask_term_signal="lift",
             subtask_term_offset_range=None,
-            selection_strategy="nearest_neighbor_object",
-            selection_strategy_kwargs=dict(nn_k=3),
+            selection_strategy="random",
+            selection_strategy_kwargs=None,
             action_noise=0.05,
             num_interpolation_steps=5,
             num_fixed_steps=0,
             apply_noise_during_interpolation=False,
         )
 
-        # move screwdriver to screw
-        self.task.task_spec.subtask_3 = dict(
-            object_ref="screwdriver", 
-            other_object_ref="screw_with_insert",
-            subtask_term_signal="distance",
-            subtask_term_offset_range=(10, 20),
-            selection_strategy="nearest_neighbor_object",
-            selection_strategy_kwargs=dict(nn_k=3),
-            action_noise=0.05,
-            num_interpolation_steps=5,
-            num_fixed_steps=0,
-            apply_noise_during_interpolation=False,
-        )
+        # get close to contact
+        # self.task.task_spec.subtask_2 = dict(
+        #     object_ref="screw_with_insert", 
+        #     subtask_term_signal="distance",
+        #     subtask_term_offset_range=None,
+        #     selection_strategy="random",
+        #     selection_strategy_kwargs=None,
+        #     action_noise=0.05,
+        #     num_interpolation_steps=5,
+        #     num_fixed_steps=0,
+        #     apply_noise_during_interpolation=False,
+        # )
 
         # touch screw with screwdriver
-        self.task.task_spec.subtask_4 = dict(
-            object_ref="screwdriver", 
-            other_object_ref="screw_with_insert",
+        self.task.task_spec.subtask_3 = dict(
+            object_ref="screw_with_insert", 
             subtask_term_signal=None,
-            subtask_term_offset_range=(10, 20),
-            selection_strategy="nearest_neighbor_object",
-            selection_strategy_kwargs=dict(nn_k=3),
+            subtask_term_offset_range=None,
+            selection_strategy="random",
+            selection_strategy_kwargs=None,
             action_noise=0.05,
             num_interpolation_steps=5,
             num_fixed_steps=0,
