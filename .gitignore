@@ -1,16 +1,55 @@
-# vscode files
-.vscode/
-
-# Python cache files
+# =====================
+# Python / Pycache
+# =====================
 __pycache__/
+*.py[cod]
+*$py.class
 
-# Python bytecode files
-*.pyc
+# =====================
+# pip / venv / conda
+# =====================
+.venv/
+env/
+venv/
+*.env
+*.venv
+.conda/
+*.conda
+conda-meta/
+pip-selfcheck.json
 
-# softlinked directories
+# =====================
+# IDE / editor
+# =====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# =====================
+# Logs / temp
+# =====================
+*.log
+*.tmp
+*.bak
+*.DS_Store
+
+# =====================
+# Data / cache
+# =====================
+*.sqlite3
+*.h5
+*.hdf5
+*.npz
+*.npy
+*.pt
+*.ckpt
+
+# =====================
+# Nested cloned repos - user should manually setup for now
+# =====================
+mimicgen/
 robosuite/
 robomimic/
-gello_software/
-
-
-
