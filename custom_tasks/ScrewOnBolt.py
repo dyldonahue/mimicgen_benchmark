@@ -162,7 +162,7 @@ class ScrewOnBoltTask(SingleArmEnv):
         render_visual_mesh=True,
         render_gpu_device_id=-1,
         control_freq=20,
-        horizon=1000,
+        horizon=2000,
         ignore_done=False,
         hard_reset=True,
         camera_names="agentview",
@@ -201,11 +201,11 @@ class ScrewOnBoltTask(SingleArmEnv):
         self._tolerance_counter = 0
         self._lower_tolerance_x = 0.005
         self._lower_tolerance_y = 0.005
-        self._lower_tolerance_z = 0.003
+        self._lower_tolerance_z = 0.005
 
-        self._higher_tolerance_x = 0.016
-        self._higher_tolerance_y = 0.016
-        self._higher_tolerance_z = 0.016
+        self._higher_tolerance_x = 0.018
+        self._higher_tolerance_y = 0.018
+        self._higher_tolerance_z = 0.005
         
 
     
@@ -310,16 +310,15 @@ class ScrewOnBoltTask(SingleArmEnv):
         Returns:
             float: reward value
         """
-        r_reach, r_lift, r_align, r_touch = self.staged_rewards()
+        r_lift, r_align, r_touch = self.staged_rewards()
         if self.reward_shaping:
             reward = max(
-                r_reach,
                 r_lift,
                 r_align,
                 r_touch,
             )
         else:
-            reward = 4.0 if r_touch > 0 else 0.0
+            reward = 3.0 if r_touch > 0 else 0.0
 
         if self.reward_scale is not None:
             reward *= self.reward_scale / 4.0
@@ -331,15 +330,15 @@ class ScrewOnBoltTask(SingleArmEnv):
         Helper function to calculate staged rewards based on current physical states.
 
         Returns:
-            4-tuple:
+            3-tuple:
 
-                - (float): reward for Reaching
-                - (float): reward for Grasp
-                - (float): reward for Lift
+                - (float): reward for Lifting
                 - (float): reward for Aligning
+                - (float): reward for Touching
         """
-        # reaching is successful when the gripper site is close to the center handle of th screwdriver
+        #lifting is succesful when when the screwdriver is lifted and tilted at correct orientation
         screwdriver_pos = self.sim.data.body_xpos[self.screwdriver_body_id]
+    
         site_id = self.sim.model.site_name2id("screwdriver_tip_site")
         tip_pos = self.sim.data.site_xpos[site_id]
         site_id = self.sim.model.site_name2id("screw_with_insert_screw_head_site")
@@ -348,37 +347,19 @@ class ScrewOnBoltTask(SingleArmEnv):
         
         gripper_site_pos = self.sim.data.site_xpos[self.robots[0].eef_site_id]
         dist = np.linalg.norm(gripper_site_pos - screwdriver_pos)
-        r_reach = (1 - np.tanh(10.0 * dist)) * 0.25
+       
 
-        if r_reach:
-            r_grasp = self._check_grasp(gripper=self.robots[0].gripper, object_geoms=self.screwdriver)
+       
 
-        r_lift = self._check_lift()
+        r_lift = self._check_orientation()
 
-        #print("tip pos:", np.round(tip_pos, 3))
-        #print("head pos:", np.round(head_pos, 3))
+        #print("DELTA:", np.round((tip_pos - head_pos), 2))
 
-        print("DELTA:", np.round((tip_pos - head_pos), 2))
-
-
-        r_align = 0
-
-        if r_lift:
-            # site_id = self.sim.model.site_name2id("screwdriver_tip_site")
-            # tip_pos = self.sim.data.site_xpos[site_id]
-            # site_id = self.sim.model.site_name2id("screw_with_insert_screw_head_site")
-            # head_pos = self.sim.data.site_xpos[site_id]
-
-
-            # distance = np.linalg.norm(tip_pos - head_pos)
-            # dist = np.round(tip_pos - head_pos)
-
-            r_align = 0
+        r_align = self._check_align()
         
-
         r_touch = self._check_contact()
 
-        return r_reach, r_grasp, r_lift, r_touch,
+        return r_lift, r_align, r_touch,
     
 
     def _load_model(self):
@@ -444,12 +425,12 @@ class ScrewOnBoltTask(SingleArmEnv):
                  UniformRandomSampler(
                 name="ScrewDriverSampler",
                 mujoco_objects=[self.screwdriver],
-                x_range=[-self.table_full_size[0]/2 + .3, -self.table_full_size[0]/2 +.31],
-                y_range=[-self.table_full_size[1]/2 +  .3, -self.table_full_size[1]/2 + 0.31],
+                x_range=[-self.table_full_size[0] * 0.1, -self.table_full_size[0] * 0.1],
+                y_range=[-self.table_full_size[1] * 0.1, -self.table_full_size[1] * 0.1],
                 rotation_axis='z',
                 rotation=np.pi/2,
-                ensure_object_boundary_in_range=True,
-                ensure_valid_placement=True,
+                ensure_object_boundary_in_range=False,
+                ensure_valid_placement=False,
                 reference_pos=self.table_offset,
                 z_offset=0.01,
             ))
@@ -459,8 +440,8 @@ class ScrewOnBoltTask(SingleArmEnv):
                     UniformRandomSampler(
                     name="ScrewInsertSampler",  
                     mujoco_objects=[self.screwinsert],
-                    x_range=[-self.table_full_size[0]/2 + 0.22, self.table_full_size[0]/2 - 0.22],
-                    y_range=[-self.table_full_size[1]/2 + self.table_full_size[1]/4, self.table_full_size[1]/2 - self.table_full_size[0]/4],
+                    x_range=[-self.table_full_size[0]/2 * 0.3, +self.table_full_size[0]/2 * 0.3],
+                    y_range=[-self.table_full_size[1]/2 * 0.4, +self.table_full_size[1]/2 * 0.4],
                     rotation_axis='z',
                     rotation=np.pi,
                     ensure_object_boundary_in_range=True,
@@ -497,10 +478,27 @@ class ScrewOnBoltTask(SingleArmEnv):
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
         if not self.deterministic_reset:
 
-            # Sample from the placement initializer for all objects
             object_placements = self.placement_initializer.sample()
 
+            screwdriver_pos, screwdriver_quat, _ = object_placements["screwdriver"]
             insert_pos, insert_quat, _ = object_placements["screw_with_insert"]
+
+            screwdriver_pos = np.array(screwdriver_pos)
+            insert_pos = np.array(insert_pos)
+
+            dist = np.linalg.norm(screwdriver_pos - insert_pos)
+
+            while dist < 0.15:
+                object_placements = self.placement_initializer.sample()
+
+                screwdriver_pos, screwdriver_quat, _ = object_placements["screwdriver"]
+                insert_pos, insert_quat, _ = object_placements["screw_with_insert"]
+
+                screwdriver_pos = np.array(screwdriver_pos)
+                insert_pos = np.array(insert_pos)
+
+                dist = np.linalg.norm(screwdriver_pos - insert_pos)
+
             
 
             # spin the direction of the tilted insert
@@ -612,7 +610,7 @@ class ScrewOnBoltTask(SingleArmEnv):
         Returns:
             bool: True if screwdriver is touching the screw head, False otherwise.
         """
-        _, _, _, r_touch = self.staged_rewards()
+        _, _, r_touch = self.staged_rewards()
 
         return r_touch > 0
     
@@ -635,28 +633,77 @@ class ScrewOnBoltTask(SingleArmEnv):
 
         if lifted:
             self._lifted +=1
-            return True
+            return self._lifted
         else:
             self._lifted = 0
             return False
     
-    def _check_distance(self):
+    def _check_orientation(self):
         """
-        Returns True if screwdriver tip is closer to screw head,
-        but they are not yet in contact.
+        Returns True if screwdriver is generally upright.
         """
        
-        if self._lifted >= 4:
+        if self._check_lift() >= 4:
+            
+            site_id = self.sim.model.site_name2id("screwdriver_tip_site")
+            tip_pos = self.sim.data.site_xpos[site_id]
+            screwdriver_pos = self.sim.data.body_xpos[self.screwdriver_body_id]
+
+            diff = screwdriver_pos - tip_pos
+            upright = diff[2] > 0.1 and abs(diff[0]) < 0.05 and abs(diff[1]) < 0.05
+
+            if upright:
+                return True
+            else:
+                return False
+          
+        else:
+            return False
+        
+    def _check_align(self):
+        """
+        Returns True if screwdriver tip is above the screw head,
+        nut aligned within tolerance.
+        """
+       
+        if self._check_lift() >= 4:
+
+            
             
             site_id = self.sim.model.site_name2id("screwdriver_tip_site")
             tip_pos = self.sim.data.site_xpos[site_id]
             site_id = self.sim.model.site_name2id("screw_with_insert_screw_head_site")
             head_pos = self.sim.data.site_xpos[site_id]
 
+            distance = tip_pos - head_pos
+            if distance[2] > 0.008 and abs(distance[0]) < 0.018 and abs(distance[1]) < 0.018:
+                
 
-            distance = np.linalg.norm(tip_pos - head_pos)
-            
-            if distance < 0.15:
+                return True
+            else:
+                return False
+          
+        else:
+            return False
+        
+    def _check_descend(self):
+        """
+        Returns True if screwdriver tip has descended slightly from
+        its previous alignment. This is to help mimicgen connect alignment 
+        to completion, otherwise the change is subtle enough that mimicgen
+        struggles to make the connection.
+        """
+       
+        if self._check_lift() >= 4:
+
+            site_id = self.sim.model.site_name2id("screwdriver_tip_site")
+            tip_pos = self.sim.data.site_xpos[site_id]
+            site_id = self.sim.model.site_name2id("screw_with_insert_screw_head_site")
+            head_pos = self.sim.data.site_xpos[site_id]
+
+            distance = tip_pos - head_pos
+            if distance[2] > 0.005 and distance[2] < 0.008 and abs(distance[0]) < 0.018 and abs(distance[1]) < 0.018:
+          
                 return True
             else:
                 return False
@@ -669,7 +716,6 @@ class ScrewOnBoltTask(SingleArmEnv):
         Returns True if screwdriver tip is touching the screw head,
         within tolerance.
         """
-       
         site_id = self.sim.model.site_name2id("screwdriver_tip_site")
         tip_pos = self.sim.data.site_xpos[site_id]
         site_id = self.sim.model.site_name2id("screw_with_insert_screw_head_site")

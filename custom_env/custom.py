@@ -66,8 +66,9 @@ class MG_Screwbolt(RobosuiteInterface):
         signals = dict()
     
         signals["lift"] = int(self.env._check_lift())
-        #signals["distance"] = int(self.env._check_distance())
-        
+        signals["orientation"] = int(self.env._check_orientation())
+        signals["align"] = int(self.env._check_align())
+       # signals["descend"] = int(self.env._check_descend())
 
         # final subtask is placing screwdriver on screw_with_insert (motion relative to screw_with_insert) - but final subtask signal is not needed
         return signals
