@@ -1,17 +1,38 @@
 <?xml version="1.0" ?>
 <mujoco model="mugtree">
   <asset>
-    <mesh file="../meshes/mugtree.stl" name="mugtree_mesh" scale="0.0007 0.0007 0.0007"/>
-    <material name="mugtree" reflectance="0.7" texrepeat="15 15" texuniform="true"/>
+    <mesh name="visual_mesh" file="../meshes/mugtree_visual.stl"/>
+    <mesh name="hull_0" file="../meshes/mugtree_hull_0.stl"/>
+    <mesh name="hull_1" file="../meshes/mugtree_hull_1.stl"/>
+    <mesh name="hull_2" file="../meshes/mugtree_hull_2.stl"/>
+    <mesh name="hull_3" file="../meshes/mugtree_hull_3.stl"/>
+    <mesh name="hull_4" file="../meshes/mugtree_hull_4.stl"/>
+    <mesh name="hull_5" file="../meshes/mugtree_hull_5.stl"/>
+    <mesh name="hull_6" file="../meshes/mugtree_hull_6.stl"/>
+    <mesh name="hull_7" file="../meshes/mugtree_hull_7.stl"/>
+    <mesh name="hull_8" file="../meshes/mugtree_hull_8.stl"/>
+    <mesh name="hull_9" file="../meshes/mugtree_hull_9.stl"/>
+    <mesh name="hull_10" file="../meshes/mugtree_hull_10.stl"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom pos="0 0 0" mesh="mugtree_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="50" friction="0.95 0.3 0.1" material="mugtree" group="0" condim="4"/>
+        <geom name="visual" type="mesh" mesh="visual_mesh" rgba="0.8 0.8 0.8 1.0" contype="0" conaffinity="0" group="1" density="1" pos="0 0 0.0001"/>
+        <geom name="collision_0" type="mesh" mesh="hull_0" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_1" type="mesh" mesh="hull_1" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_2" type="mesh" mesh="hull_2" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_3" type="mesh" mesh="hull_3" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_4" type="mesh" mesh="hull_4" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_5" type="mesh" mesh="hull_5" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_6" type="mesh" mesh="hull_6" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_7" type="mesh" mesh="hull_7" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_8" type="mesh" mesh="hull_8" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_9" type="mesh" mesh="hull_9" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
+        <geom name="collision_10" type="mesh" mesh="hull_10" rgba="0.5 0.5 0.5 0.01" density="45.45454545454545" friction="0.95 0.3 0.1" condim="4" solref="0.001 1" solimp="0.998 0.998 0.001" group="0"/>
       </body>
-      <site rgba="0 0 0 0" size="0.005" pos="-0.03498484278505823 -0.03499999947709684 -0.07502205701736107" name="bottom_site"/>
-      <site rgba="0 0 0 0" size="0.005" pos="0.03501515988522985 0.0349999925120389 0.11730204576584206" name="top_site"/>
-      <site rgba="0 0 0 0" size="0.005" pos="0.03500000133514404 0.03499999599456787 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0 0 0" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0 0 0.1" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.05 0 0.05" name="horizontal_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

@@ -1,0 +1,24 @@
+Mon Sep 22 16:25:36 2025
+WARNING: Nan, Inf or huge value in QACC at DOF 16. The simulation is unstable. Time = 0.6260.
+
+Mon Sep 22 17:07:01 2025
+WARNING: Nan, Inf or huge value in QACC at DOF 18. The simulation is unstable. Time = 0.3560.
+
+Mon Sep 22 17:08:10 2025
+WARNING: Nan, Inf or huge value in QACC at DOF 18. The simulation is unstable. Time = 0.8240.
+
+Tue Oct  7 16:24:23 2025
+WARNING: Nan, Inf or huge value in QACC at DOF 15. The simulation is unstable. Time = 0.3380.
+
+Tue Oct  7 16:24:28 2025
+WARNING: Nan, Inf or huge value in QACC at DOF 15. The simulation is unstable. Time = 0.1500.
+
+Wed Oct 15 12:39:36 2025
+WARNING: Inertia matrix is too close to singular at DOF 17. Check model. Time = 0.0000.
+
+Wed Oct 15 12:39:36 2025
+WARNING: Inertia matrix is too close to singular at DOF 17. Check model. Time = 0.0000.
+
+Wed Oct 15 12:39:42 2025
+WARNING: Inertia matrix is too close to singular at DOF 17. Check model. Time = 0.0000.
+

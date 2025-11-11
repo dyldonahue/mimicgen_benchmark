@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<mujoco model="book">
+  <asset>
+    <mesh file="../meshes/book.stl" name="book_mesh" scale="0.0005 0.0005 0.0005"/>
+    <material name="book" reflectance="0.7" texrepeat="15 15" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <geom pos="0 0 0" euler="0 0 1.5708" mesh="book_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="book" group="0" condim="4"/>
+      </body>
+      <site rgba="0 0 0 0" size="0.005" pos="-0.015510760307312013 -0.04835884475708008 0.06625" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="-0.0005107601881027222 0.056641155242919926 0.14375000000000002" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.007500000059604645 0.0525 0" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>
