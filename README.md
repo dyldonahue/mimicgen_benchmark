@@ -1,67 +1,116 @@
-# Contents
-- [Environment Setup](#env-setup)
-- [Directory Structure](#dir-struct)
-- [Generating Data](#data-gen)
-- [Common Issues](#issues)
+# MimicGen Benchmark
 
- <a id="env-setup"></a>
-### Environment Setup:
+Custom manipulation tasks, objects, and environments for [RoboSuite](https://github.com/ARISE-Initiative/robosuite) and [MimicGen](https://github.com/NVlabs/mimicgen).
 
-Mimicgen, Robosuite, Robomimic must be added to PYTHONPATH in addition to this top level directory
+## Overview
 
-In Ubuntu:
+This repository extends RoboSuite and MimicGen with custom manipulation tasks featuring:
+
+- **Custom Objects**: Complex, 3rd party CAD with proper physics 
+- **Complex Manipulation Tasks**: Expanding MimicGen's base suite of tasks
+- **MimicGen Integration**: (some) D0-D2 task variations for data generation
+
+## Installation
+
+### Prerequisites
+
+```bash
+# Python 3.8+
+python --version
+
+# Install RoboSuite, MimicGen and Robomimimic
+# As of lat update, on greater than Robosuite=1.4.1 was compatable with MimicGen
+https://robosuite.ai/docs/installation.html
+https://mimicgen.github.io/docs/introduction/installation.html
+https://robomimic.github.io/docs/introduction/installation.html
+```
+
+### Install This Package
+
+```bash
+# Clone the repository
+git clone https://github.com/dyldonahue/mimicgen_benchmark.git
+cd mimicgen_benchmark
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install in development mode
+pip install -e .
+```
+
+### Verify Installation
+
+```bash
+python -c "from custom_env.custom import MG_MugTree; print('Installation successful!')"
+```
+
+## Quick Start - Data Generation
+
+1. Collect Human demonstrations with task: 
+
+```
+python robosuite/robosuite/scripts/collect_human_demonstrations.py --environment env_name --directory path/to/teleop/demos
 
 ```
 
-export PYTHONPATH="/path/to/thisDirectory:/path/to/robosuite:/path/to/mimicgen:/path/to/robomimic:$PYTHONPATH" 
+2. Make it Robomimic compatible:
 
 ```
- <a id="dir-struct"></a>
-### Directory Structure
-**assets:** meshes, texture, and stl files for custom objects  
-**custom_devices:** Custom controller device definitions  
-**custom_env:** Mimicgen environment definitions  
-**custom_subtasks:** Mimicgen config for subtask definitions  
-**custom_tasks:** Robosuite task/env definitions  
-**scripts:** executables to run environments or record data  
-**util:** helper scripts for quicker iteration  
+python robomimic/robomimic/scripts/conversion/convert_robosuite.py --dataset path/to/teleop/demo/demo.hdf5
 
-Some data exists within robosuite or mimicgen structure, not currently published here.  
-- Custom device control (gello) is added as a selectable option in Robosuite's collect_human_demonstrations  
-- Mimicgen places custom task configs with all other configs in mimicgen/exps
-- Initiialze tasks & environments by adding them to the __init__.py in both Robosuite and Mimicgen
-
-
- <a id="data-gen"></a>
-### Generating Data
-
-#### 1. Collect Teleoperated demonstrations  
-Utilize Robosuite's collect_human_demonstrations script OR via Robomimic directly (untested)
-
-#### 2. (if collected via Robosuite) Convert format
-utilize Robomimic's convert_robosuite task
-
-#### 3. Annotate demos with additional info
-Utilize Mimicgen's prepare_src_demonstrations script
-
-#### 4. (if using new task for first time) Update Mimicgen config list
-Utilize Mimicgen's generate_config_template script
-
-#### 5. Generate synthetic demos
-Utilize Mimicgen's generate_dataset
-
- <a id="issues"></a>
-### Errors I've encountered
-
-#### 1. Mesa loader (Ubuntu)
-
-Preload Mesa with execution:
+```
+3. (If you've edited the Mimicgen Task config) Reload Mimicgen Configs:
+```
+python mimicgen/mimicgen/scripts/generate_config_template.py
 
 ```
 
-LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libstdc++.so.6 /usr/lib/x86_64-linux│ -gnu/libGL.so.1" python...
+4. Annote with subtask information:
+```
+python mimicgen/mimicgen/scripts/prepare_src_dataset.py \
+    --dataset path/to/teleop/demo/demo.hdf5 \
+    --env_interface_type robosuite \
+    --env_interface MG_InterfaceName \
+    --output path/to/formatted/demos/demo.hdf5
+
+```
+5. Generate Data:
+```
+python mimicgen/mimicgen/scripts/generate_dataset.py \
+    --config mimicgen/mimicgen/exps/templates/robosuite/env_name.json \
+    --source path/to/formatted/demos/demo.hdf5 \
+    --folder path/to/generated/data \
+    --task_name env_name \
+    --num_demos 1000
 
 ```
 
 
+## Project Structure
 
+```
+mimicgen_benchmark/
+├── assets/                     # 3D assets
+│   ├── meshes/                # Source STL files
+│   ├── objects/               # Processed objects (XML)
+│   └── textures/              # Textures for rendering
+│
+├── custom_tasks/              # RoboSuite task environments
+│   ├── mug_tree.py
+│   ├── place_on_shelf.py
+│   ├── screw_touch.py
+│   └── etc
+│
+├── custom_env/                # MimicGen interface classes
+│   └── custom.py              # MG_* wrapper classes
+│
+├── custom_objects/            # Custom object definitions
+│   └── objects.py             # Object classes
+│
+├── custom_subtasks/           # Subtask definitions for MimicGen 
+│   └── configs.py
+│
+├── scripts/                   # Utility scripts
+
+```

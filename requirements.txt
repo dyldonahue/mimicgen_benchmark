@@ -1,0 +1,12 @@
+numpy>=1.20.0
+trimesh>=3.9.0
+pymeshlab>=2022.2
+
+# V-HACD convex decomposition (recommended)
+coacd>=1.0.0
+
+# Optional: Alternative V-HACD implementation
+# pybullet>=3.2.0
+
+scipy>=1.7.0
+h5py>=3.0.0
