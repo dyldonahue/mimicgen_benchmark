@@ -19,7 +19,7 @@ This repository extends RoboSuite and MimicGen with custom manipulation tasks fe
 python --version
 
 # Install RoboSuite, MimicGen and Robomimimic
-# As of lat update, on greater than Robosuite=1.4.1 was compatable with MimicGen
+# As of lat update, no greater than Robosuite=1.4.1 was compatable with MimicGen
 https://robosuite.ai/docs/installation.html
 https://mimicgen.github.io/docs/introduction/installation.html
 https://robomimic.github.io/docs/introduction/installation.html
