@@ -20,11 +20,11 @@ from robosuite.utils.transform_utils import euler2mat, mat2quat, quat_multiply, 
 
 
 """ imported custom objects"""
-from custom_objects.objects import CabinetObject
+from custom_objects.objects import DrawerObject
 from robosuite.models.objects.composite import HammerObject
 
 
-class DrawerPlace(SingleArmEnv):
+class drawer_place(SingleArmEnv):
     """
     This class corresponds to the Drawer Place task for a single robot arm.
 
@@ -358,7 +358,7 @@ class DrawerPlace(SingleArmEnv):
 
         # self.drawer = DrawerObject(drawer_base=self.drawer_base, drawer_1=self.drawer_1,drawer_2=self.drawer_2,drawer_3=self.drawer_3,drawer_4=self.drawer_4)
         self.hammer = HammerObject(name="hammer")
-        self.drawer = CabinetObject(name="drawer")
+        self.drawer = DrawerObject(name="drawer")
 
         # create a list of all objects to be placed
         objects = [self.drawer, self.hammer]
@@ -435,17 +435,17 @@ class DrawerPlace(SingleArmEnv):
 
             # Loop through all objects and reset their positions
 
-            for obj_pos, obj_quat, obj in object_placements.values():
-                if obj.joints and len(obj.joints) > 0:
-                    self.sim.data.set_joint_qpos(
-                        obj.joints[0],
-                        np.concatenate([np.array(obj_pos), np.array(obj_quat)]),
-                    )
+            # for obj_pos, obj_quat, obj in object_placements.values():
+            #     if obj.joints and len(obj.joints) > 0:
+            #         self.sim.data.set_joint_qpos(
+            #             obj.joints[0],
+            #             np.concatenate([np.array(obj_pos), np.array(obj_quat)]),
+            #         )
 
-                else:
-                    body_id = self.sim.model.body_name2id(obj.root_body)
-                    self.sim.model.body_pos[body_id] = obj_pos
-                    self.sim.model.body_quat[body_id] = obj_quat
+            #     else:
+            #         body_id = self.sim.model.body_name2id(obj.root_body)
+            #         self.sim.model.body_pos[body_id] = obj_pos
+            #         self.sim.model.body_quat[body_id] = obj_quat
 
     def _setup_observables(self):
         """

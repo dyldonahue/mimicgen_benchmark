@@ -39,10 +39,12 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-### Verify Installation
+### Import Custom modules into mimicgen
+(in mimicgen/\_\_init__.py:)
 
 ```bash
-python -c "from custom_env.custom import MG_MugTree; print('Installation successful!')"
+    import custom_tasks
+    import custom_env
 ```
 
 ## Quick Start - Data Generation

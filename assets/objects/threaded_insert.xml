@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <mujoco model="threaded_insert">
   <asset>
-    <mesh file="../meshes/threaded_insert.stl" name="threaded_insert_mesh" scale="0.002 0.002 0.002"/>
+    <mesh file="../meshes/threaded_insert/threaded_insert.stl" name="threaded_insert_mesh" scale="0.002 0.002 0.002"/>
     <texture file="../textures/threaded_insert.png" type="2d" name="tex-threaded_insert"/>
     <material name="threaded_insert" reflectance="0.7" texrepeat="15 15" texture="tex-threaded_insert" texuniform="true"/>
   </asset>

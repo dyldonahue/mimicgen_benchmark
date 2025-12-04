@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <mujoco model="shelf">
   <asset>
-    <mesh file="../meshes/shelf.stl" name="shelf_mesh" scale="0.00023 0.00015 0.00015"/>
+    <mesh file="../meshes/shelf/shelf.stl" name="shelf_mesh" scale="0.00023 0.00015 0.00015"/>
     <texture file="../textures/shelf.png" type="2d" name="tex-shelf"/>
     <material name="shelf" reflectance="0.7" texrepeat="15 15" texture="tex-shelf" texuniform="true"/>
   </asset>

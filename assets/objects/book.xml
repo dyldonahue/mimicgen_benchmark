@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <mujoco model="book">
   <asset>
-    <mesh file="../meshes/book.stl" name="book_mesh" scale="0.0005 0.0005 0.0005"/>
+    <mesh file="../meshes/book/book.stl" name="book_mesh" scale="0.0005 0.0005 0.0005"/>
     <material name="book" reflectance="0.7" texrepeat="15 15" texuniform="true"/>
   </asset>
   <worldbody>

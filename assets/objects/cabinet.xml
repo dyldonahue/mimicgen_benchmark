@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<mujoco model="cabinet">
+  <compiler autolimits="true" angle="radian" meshdir="../meshes/cabinet/"/>
+  <asset>
+    <mesh name="frame_mesh" file="../meshes/cabinet/cabinet_frame.stl"/>
+    <mesh name="drawer_0_mesh" file="../meshes/cabinet/cabinet_drawer_0.stl"/>
+    <mesh name="drawer_1_mesh" file="../meshes/cabinet/cabinet_drawer_1.stl"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <body name="frame">
+          <!-- Frame visual -->
+          <geom name="visual_0" type="mesh" mesh="frame_mesh" 
+                rgba="0.6 0.4 0.2 1.0" 
+                contype="0" conaffinity="0" 
+                group="1" density="1"/>
+          
+          <!-- Frame collision - use box with proper mass -->
+          <geom name="collision_0" type="box" 
+                size="0.21 0.2 0.325" 
+                pos="0 0 0.325"
+                density="2000.0" 
+                friction="0.95 0.3 0.1" 
+                condim="4" 
+                solref="0.001 1" 
+                solimp="0.998 0.998 0.001" 
+                group="0"/>
+          
+          <!-- Drawer 0 -->
+          <body name="drawer_0" pos="0 0 0.16">
+            <geom name="visual_1" type="mesh" mesh="drawer_0_mesh" 
+                  rgba="0.7 0.5 0.3 1.0" 
+                  contype="0" conaffinity="0" 
+                  group="1" density="1"/>
+            
+            <!-- Drawer collision - box with guaranteed mass -->
+            <geom name="collision_1" type="box" 
+                  size="0.19 0.15 0.08" 
+                  density="500.0" 
+                  friction="0.95 0.3 0.1" 
+                  condim="4" 
+                  solref="0.001 1" 
+                  solimp="0.998 0.998 0.001" 
+                  group="0"/>
+            
+            <joint name="joint_1" type="slide" axis="0 1 0" 
+                   range="0 0.25" limited="true" 
+                   damping="10" armature="0.01" frictionloss="2"/>
+            
+            <site name="handle_1" pos="0 0.2 0" size="0.02 0.01 0.03" 
+                  rgba="0.8 0.8 0.8 0.5" type="box"/>
+          </body>
+          
+          <!-- Drawer 1 -->
+          <body name="drawer_1" pos="0 0 0.48">
+            <geom name="visual_2" type="mesh" mesh="drawer_1_mesh" 
+                  rgba="0.7 0.5 0.3 1.0" 
+                  contype="0" conaffinity="0" 
+                  group="1" density="1"/>
+            
+            <!-- Drawer collision - box with guaranteed mass -->
+            <geom name="collision_2" type="box" 
+                  size="0.19 0.15 0.08" 
+                  density="500.0" 
+                  friction="0.95 0.3 0.1" 
+                  condim="4" 
+                  solref="0.001 1" 
+                  solimp="0.998 0.998 0.001" 
+                  group="0"/>
+            
+            <joint name="joint_2" type="slide" axis="0 1 0" 
+                   range="0 0.25" limited="true" 
+                   damping="10" armature="0.01" frictionloss="2"/>
+            
+            <site name="handle_2" pos="0 0.2 0" size="0.02 0.01 0.03" 
+                  rgba="0.8 0.8 0.8 0.5" type="box"/>
+          </body>
+        </body>
+      </body>
+      
+      <site rgba="0 0 0 0" size="0.005" pos="0 0 0" name="bottom_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0 0 0.65" name="top_site"/>
+      <site rgba="0 0 0 0" size="0.005" pos="0.21 0 0.32" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>

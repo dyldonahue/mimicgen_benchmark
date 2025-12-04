@@ -1,18 +1,18 @@
 <?xml version="1.0" ?>
 <mujoco model="mugtree">
   <asset>
-    <mesh name="visual_mesh" file="../meshes/mugtree_visual.stl"/>
-    <mesh name="hull_0" file="../meshes/mugtree_hull_0.stl"/>
-    <mesh name="hull_1" file="../meshes/mugtree_hull_1.stl"/>
-    <mesh name="hull_2" file="../meshes/mugtree_hull_2.stl"/>
-    <mesh name="hull_3" file="../meshes/mugtree_hull_3.stl"/>
-    <mesh name="hull_4" file="../meshes/mugtree_hull_4.stl"/>
-    <mesh name="hull_5" file="../meshes/mugtree_hull_5.stl"/>
-    <mesh name="hull_6" file="../meshes/mugtree_hull_6.stl"/>
-    <mesh name="hull_7" file="../meshes/mugtree_hull_7.stl"/>
-    <mesh name="hull_8" file="../meshes/mugtree_hull_8.stl"/>
-    <mesh name="hull_9" file="../meshes/mugtree_hull_9.stl"/>
-    <mesh name="hull_10" file="../meshes/mugtree_hull_10.stl"/>
+    <mesh name="visual_mesh" file="../meshes/mugtree/mugtree_visual.stl"/>
+    <mesh name="hull_0" file="../meshes/mugtree/mugtree_hull_0.stl"/>
+    <mesh name="hull_1" file="../meshes/mugtree/mugtree_hull_1.stl"/>
+    <mesh name="hull_2" file="../meshes/mugtree/mugtree_hull_2.stl"/>
+    <mesh name="hull_3" file="../meshes/mugtree/mugtree_hull_3.stl"/>
+    <mesh name="hull_4" file="../meshes/mugtree/mugtree_hull_4.stl"/>
+    <mesh name="hull_5" file="../meshes/mugtree/mugtree_hull_5.stl"/>
+    <mesh name="hull_6" file="../meshes/mugtree/mugtree_hull_6.stl"/>
+    <mesh name="hull_7" file="../meshes/mugtree/mugtree_hull_7.stl"/>
+    <mesh name="hull_8" file="../meshes/mugtree/mugtree_hull_8.stl"/>
+    <mesh name="hull_9" file="../meshes/mugtree/mugtree_hull_9.stl"/>
+    <mesh name="hull_10" file="../meshes/mugtree/mugtree_hull_10.stl"/>
   </asset>
   <worldbody>
     <body>

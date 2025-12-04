@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <mujoco model="screw">
   <asset>
-    <mesh file="../meshes/screw.stl" name="screw_mesh" scale="0.002 0.002 0.002"/>
+    <mesh file="../meshes/screw/screw.stl" name="screw_mesh" scale="0.002 0.002 0.002"/>
     <texture file="../textures/screw.png" type="2d" name="tex-screw"/>
     <material name="screw" reflectance="0.7" texrepeat="15 15" texture="tex-screw" texuniform="true"/>
   </asset>

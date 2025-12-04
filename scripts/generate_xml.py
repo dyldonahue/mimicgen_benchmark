@@ -10,7 +10,7 @@ Processes STL files for use in RoboSuite by:
 - Creating both visual and collision meshes
 
 Usage: python generate_xml.py <object_name> [options]
-Example: python process_stl_object.py mug --scale 0.001 --target-size 0.08
+Example: python generate_xml.py mug --scale 0.001 --target-size 0.08
 """
 
 import sys
@@ -280,6 +280,7 @@ def center_mesh(mesh):
 
     return mesh, offset
 
+
 def generate_xml(
     output_path,
     visual_mesh_file,
@@ -307,12 +308,22 @@ def generate_xml(
 
     xml = ET.Element("mujoco", model=object_name)
 
-    # Asset section
+    # Asset section - path relative to XML location (objects/ -> meshes/object_name/)
     asset = ET.SubElement(xml, "asset")
-    ET.SubElement(asset, "mesh", name="visual_mesh", file=os.path.join(".", "..", "meshes", visual_mesh_file))
+    ET.SubElement(
+        asset,
+        "mesh",
+        name="visual_mesh",
+        file=os.path.join("..", "meshes", object_name, visual_mesh_file),
+    )
 
     if not use_same_for_collision and collision_mesh_file is not None:
-        ET.SubElement(asset, "mesh", name="collision_mesh", file=os.path.join(".", "..", "meshes", collision_mesh_file))
+        ET.SubElement(
+            asset,
+            "mesh",
+            name="collision_mesh",
+            file=os.path.join("..", "meshes", object_name, collision_mesh_file),
+        )
 
     # Worldbody
     worldbody = ET.SubElement(xml, "worldbody")
@@ -386,7 +397,8 @@ def generate_xml(
         f.write(pretty_xml)
 
     print(f"Generated XML: {output_path}")
- 
+
+
 def process_stl_object(
     input_path,
     object_name,
@@ -409,16 +421,20 @@ def process_stl_object(
         skip_simplification: Don't create separate collision mesh
     """
 
-    # Setup output directory
+    # Setup output directories - only meshes have object_name subdirectory
     if output_dir is None:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         xml_output_dir = os.path.join(script_dir, "..", "assets", "objects")
-        mesh_output_dir = os.path.join(script_dir, "..", "assets", "meshes")
+        mesh_output_dir = os.path.join(
+            script_dir, "..", "assets", "meshes", object_name
+        )
+
+    # Create mesh subdirectory if it doesn't exist
+    os.makedirs(mesh_output_dir, exist_ok=True)
 
     try:
         mesh = trimesh.load(input_path)
     except Exception as e:
-
         print(f"Failed to load mesh: {e}")
         return False
 
@@ -442,7 +458,7 @@ def process_stl_object(
     print("=" * 70)
     analyze_mesh(mesh, f"{object_name} (processed)")
 
-    # Save visual mesh
+    # Save visual mesh to meshes/object_name/
     visual_path = os.path.join(mesh_output_dir, f"{object_name}_visual.stl")
     mesh.export(visual_path)
 
@@ -456,7 +472,7 @@ def process_stl_object(
         collision_mesh.export(collision_path)
         use_same_for_collision = False
 
-    # Generate XML
+    # Generate XML in objects/object_name/
     xml_path = os.path.join(xml_output_dir, f"{object_name}.xml")
     generate_xml(
         output_path=xml_path,
@@ -467,10 +483,11 @@ def process_stl_object(
     )
 
     print(f"\nGenerated files:")
-    print(f"  - {object_name}.xml")
-    print(f"  - {object_name}_visual.stl")
+    print(f"  XML:    assets/objects/{object_name}.xml")
+    print(f"  Meshes: assets/meshes/{object_name}/")
+    print(f"    - {object_name}_visual.stl")
     if not use_same_for_collision:
-        print(f"  - {object_name}_collision.stl")
+        print(f"    - {object_name}_collision.stl")
     return True
 
 
@@ -481,23 +498,24 @@ def main():
         epilog="""
 Examples:
   # Basic usage (auto-detect scale)
-  python process_stl_object.py mug
+  python generate_xml.py mug
   
   # Specify scale factor (e.g., mm to m)
-  python process_stl_object.py mug --scale 0.001
+  python generate_xml.py mug --scale 0.001
   
   # Specify target size
-  python process_stl_object.py mug --target-size 0.08
+  python generate_xml.py mug --target-size 0.08
   
   # High detail collision
-  python process_stl_object.py mug --collision-faces 2000
+  python generate_xml.py mug --collision-faces 2000
   
   # Use same mesh for collision (no simplification)
-  python process_stl_object.py simple_box --skip-simplification
+  python generate_xml.py simple_box --skip-simplification
 
 Expected file structure:
-  assets/meshes/mug.stl  (input)
-  assets/objects/mug/    (output)
+  assets/meshes/mug/mug.stl      (input)
+  assets/objects/mug.xml         (output)
+  assets/meshes/mug/mug_*.stl    (output)
         """,
     )
 
@@ -529,15 +547,22 @@ Expected file structure:
 
     args = parser.parse_args()
 
-    # Find input mesh
+    # Find input mesh - now looks in meshes/object_name/
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mesh_path = os.path.join(
-        script_dir, "..", "assets", "meshes", f"{args.object_name}.stl"
+        script_dir,
+        "..",
+        "assets",
+        "meshes",
+        args.object_name,
+        f"{args.object_name}.stl",
     )
 
     if not os.path.isfile(mesh_path):
         print(f"Error: Mesh not found at {mesh_path}")
-        print(f"\nExpected location: assets/meshes/{args.object_name}.stl")
+        print(
+            f"\nExpected location: assets/meshes/{args.object_name}/{args.object_name}.stl"
+        )
         sys.exit(1)
 
     # Process
